@@ -3,4 +3,8 @@
 
 
 
+
+#define NUMBER_OF_VERTICAL_THRUSTER 2
+#define NUMBER_OF_HORIZENTAL_THRUSTER 4
+
 #endif

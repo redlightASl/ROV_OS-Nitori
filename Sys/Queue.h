@@ -1,6 +1,6 @@
 /**
- * @file System.h
- * @brief Nitori内核部分-系统时钟
+ * @file Queue.h
+ * @brief Nitori内核部分-消息队列
  * @author RedlightASl (dddbbbdd@foxmail.com)
  * @version 1.0
  * @date 2021-09-18
@@ -13,12 +13,8 @@
  * <tr><td>2021-09-18 <td>1.0     <td>wangh     <td>Content
  * </table>
  */
-#ifndef __ROV_SYSTEM_H
-#define __ROV_SYSTEM_H
-
-
-
-
+#ifndef __ROV_QUEUE_H
+#define __ROV_QUEUE_H
 
 
 

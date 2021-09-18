@@ -49,7 +49,7 @@ extern "C" {
                                                         &&(pwm_value >= bottom_value))?\
                                                         (1):(0))
 
-//TODO:map(origin,origin_bottom,origin_top,tatget_bottom,target_top)函数
+//TODO:target_data map(origin_data,origin_bottom,origin_top,tatget_bottom,target_top)函数
 
 
 
@@ -57,6 +57,7 @@ u8 ParityCheck(u8* CacString, u8 CacStringSize);
 u16 PositionalPID(u16 target_value,u16 actual_value);
 u16 IncrementalPID(u16 target_value,u16 actual_value);
 u16 KalmanFilter(u16 original_value);
+vu32 ThrusterControl(u16 straight_num,u16 rotate_num,u16 vertical_num,u8 mode_num);
 
 #ifdef __cplusplus
 }
