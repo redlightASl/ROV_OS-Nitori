@@ -16,6 +16,16 @@
 #ifndef __ROV_DEFINES_H
 #define __ROV_DEFINES_H
 
+//串口硬件设备
+// #define UART_Device UART_HandleTypeDef
+#define UART_Device u8*
+//定时器硬件设备
+#define TIMER_Device TIM_HandleTypeDef
+//SPI硬件设备
+#define SPI_Device SPI_HandleTypeDef
+//IIC硬件设备
+#define IIC_Device IIC_HandleTypeDef
+
 #define ROV_STABLE_MEMORY_SPACE __attribute__((section(".RAM_D1")))
 
 typedef unsigned   char   u8;                /**<  8bit integer type */
