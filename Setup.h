@@ -6,8 +6,18 @@
 //#define MOVE_CARBIN //PWM仓、电源仓
 
 /* 数据校验开关 */
+#define DATA_CHECK //数据校验总控制
 #define ROV_MESSAGE_DATA_CHECK //上传数据校验
 #define ROV_COMMAND_DATA_CHECK //下传指令校验
+
+/* 硬件加速开关 */
+#define HARDWARE_ACCELERATE_PID
+#define HARDWARE_ACCELERATE_KALMAN
+#define HARDWARE_ACCELERATE_CRC
+#define HARDWARE_ACCELERATE_PARITY
+#define HARDWARE_ACCELERATE_XOR
+// #define HARDWARE_ACCELERATE_
+// #define HARDWARE_ACCELERATE_
 
 /* PID模式 */
 #define PID_FIXED //恒定参数
@@ -34,8 +44,8 @@
 /* 传感器数据最大长度 */
 #define MAX_LENGTH_OF_SENSOR_DATA 8
 
-
-
+/* 内核名称最大长度 */
+#define MAX_LENGTH_OF_CORE_NAME 8
 
 
 

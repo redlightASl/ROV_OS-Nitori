@@ -17,6 +17,23 @@
 #define __ROV_QUEUE_H
 
 
+struct rt_messagequeue
+{
+    struct rt_ipc_object parent;                        /**< inherit from ipc_object */
 
+    void                *msg_pool;                      /**< start address of message queue */
+
+    rt_uint16_t          msg_size;                      /**< message size of each message */
+    rt_uint16_t          max_msgs;                      /**< max number of messages */
+
+    rt_uint16_t          entry;                         /**< index of messages in the queue */
+
+    void                *msg_queue_head;                /**< list head */
+    void                *msg_queue_tail;                /**< list tail */
+    void                *msg_queue_free;                /**< pointer indicated the free node of queue */
+
+    rt_list_t            suspend_sender_thread;         /**< sender thread suspended on this message queue */
+};
+typedef struct rt_messagequeue *rt_mq_t;
 
 #endif

@@ -4,9 +4,9 @@
  * @author RedlightASl (dddbbbdd@foxmail.com)
  * @version 1.0
  * @date 2021-09-18
- * 
+ *
  * @copyright Copyright (c) 2021  RedlightASl
- * 
+ *
  * @par 修改日志:
  * <table>
  * <tr><th>Date       <th>Version <th>Author  <th>Description
@@ -24,10 +24,10 @@ extern "C" {
 
     struct rov_SensorData
     {
-        u8* data_id; // 
+        u8* data_id; //当前数据位对应的id
         u8 hex_num[MAX_LENGTH_OF_SENSOR_DATA]; //数据位缓存区
         u8 count; //当前数据位置
-        u8 //当前传感器数据
+
 
         // u8 (*rov_Sensor_GetData)(struct rov_SensorData* data); //按位收取传感器数据并保存到数据位缓存区
     };
@@ -41,8 +41,8 @@ extern "C" {
         ROV_STABLE_MEMORY_SPACE u8* buffer; //传感器接收缓存区指针
         u8 buffer_length; //传感器接收缓存区大小
 
-        u8 (*rov_Sensor_Init)(void); //传感器初始化
-        u8 (*rov_Sensor_Receive)(struct rov_Sensor* sensor); //传感器数据接收
+        u8(*rov_Sensor_Init)(void); //传感器初始化
+        u8(*rov_Sensor_Receive)(struct rov_Sensor* sensor); //传感器数据接收
 
         struct rov_Sensor* previous;
         struct rov_Sensor* next;
@@ -54,7 +54,7 @@ extern "C" {
     struct rov_SensorInformation
     {
         rov_Sensor_t sensor_head; //传感器头指针
-        UART_Hardware huart; //上传串口硬件设备
+        UART_Device huart; //上传串口硬件设备
         ROV_STABLE_MEMORY_SPACE u8* buffer; //上传缓存区指针
         u8 buffer_length; //上传缓存区大小
 

@@ -49,15 +49,41 @@ extern "C" {
                                                         &&(pwm_value >= bottom_value))?\
                                                         (1):(0))
 
-//TODO:target_data map(origin_data,origin_bottom,origin_top,tatget_bottom,target_top)函数
+/**
+ * @brief 将一个数据从某个区间映射到另一个目标区间
+ * @param origin_data 原始数据
+ * @param origin_bottom 原始数据下限
+ * @param origin_top 原始数据上限
+ * @param tatget_bottom 目标数据下限
+ * @param target_top 目标数据上限
+ * @return 目标区间上的数据值
+ */
+#define MAP(origin_data,origin_bottom,origin_top,tatget_bottom,target_top) \
+			(((origin_data) - (origin_bottom)) * \
+			((target_top) - (tatget_bottom)) / \
+			((origin_top) - (origin_bottom))) + \
+			(tatget_bottom)
 
+struct AttitudeControl
+{
+	vu32 HorizontalThruster_RightFront;
+	vu32 HorizontalThruster_RightRear;
+	vu32 HorizontalThruster_LeftFront;
+	vu32 HorizontalThruster_LeftRear;
+	vu32 VerticalThruster_RightFront;
+	vu32 VerticalThruster_RightRear;
+	vu32 VerticalThruster_LeftFront;
+	vu32 VerticalThruster_LeftRear;
+};
+typedef struct AttitudeControl AttitudeControl_t;
 
-
+u8 SumCheck(u8* CacString, u8 CacBit);
+u8 CrcCheck(u8* CacString, u8 CacStringSize);
 u8 ParityCheck(u8* CacString, u8 CacStringSize);
 u16 PositionalPID(u16 target_value,u16 actual_value);
 u16 IncrementalPID(u16 target_value,u16 actual_value);
 u16 KalmanFilter(u16 original_value);
-vu32 ThrusterControl(u16 straight_num,u16 rotate_num,u16 vertical_num,u8 mode_num);
+AttitudeControl_t CommonThrusterControl(u16 straight_num, u16 rotate_num, u16 vertical_num, u8 horizental_mode_num, u8 vertical_mode_num);
 
 #ifdef __cplusplus
 }
