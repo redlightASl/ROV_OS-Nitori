@@ -17,6 +17,23 @@
 #define __ROV_SYSTEM_H
 
 
+struct rov_Core
+{
+    u8 name[MAX_LENGTH_OF_CORE_NAME];
+    u8 type;
+    u8 flag;
+    rov_DoubleList_t core_list; //内核对象链表
+
+};
+typedef struct rov_Core* rov_Core_t; /* 基本内核类 */
+
+struct rov_Core_information
+{
+    rov_Core_Type type;
+    rov_DoubleList_t object_list;
+    u8 object_list_size;
+};
+typedef struct rov_Core_information rov_Core_information_t; /* 内核对象属性 */
 
 enum rt_device_class_type
 {
@@ -124,7 +141,7 @@ typedef struct rt_wqueue rt_wqueue_t;
 
 struct rt_device
 {
-    struct rt_object          parent;                   /**< inherit from rt_object */
+    struct rt_object parent;
 
     enum rt_device_class_type type;                     /**< device type */
     rt_uint16_t               flag;                     /**< device flag */

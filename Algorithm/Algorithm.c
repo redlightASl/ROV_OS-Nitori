@@ -168,7 +168,10 @@ AttitudeControl_t CommonThrusterControl(u16 straight_num, u16 rotate_num, u16 ve
         ThrusterTemp.HorizontalThruster_LeftFront = (vu32)(rotate_num);
         ThrusterTemp.HorizontalThruster_LeftRear = (vu32)(3000 - rotate_num);
         break;
-    default: //TODO:自由翻滚模式
+    case MIX_MODE: //TODO:自由翻滚模式
+    
+        break;
+    default:
         break;
     }
 
@@ -199,9 +202,12 @@ AttitudeControl_t CommonThrusterControl(u16 straight_num, u16 rotate_num, u16 ve
         ThrusterTemp.VerticalThruster_LeftFront = (vu32)(3000 - vertical_num);
         ThrusterTemp.VerticalThruster_LeftRear = (vu32)(3000 - vertical_num);
         break;
-    default: //TODO:自由翻滚模式
+    case MIX_MODE: //TODO:自由翻滚模式
+
+    break;
+    default:
         break;
-    }
+}
 #endif
 
     return ThrusterTemp;

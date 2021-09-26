@@ -65,12 +65,14 @@ typedef enum
 enum HorizentalMode{
     ROTATE_MODE,
     SIDEPUSH_MODE,
+    MIX_MODE
 };
 
 enum VerticalMode{
     UPDOWN_MODE,
     ROLL_MODE,
-    PITCH_MODE
+    PITCH_MODE,
+    MIX_MODE
 };
 
 
