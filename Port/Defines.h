@@ -20,6 +20,13 @@
 extern "C" {
 #endif
 
+/* Distribution Version */
+#define NITORI_VERSION 0L
+#define NITORI_SUBVERSION 1L
+#define NITORI_REVISION 1L
+
+#define NITORI_VERSION ((NITORI_VERSION * 10000) + (NITORI_SUBVERSION * 100) + (NITORI_REVISION))
+
 //串口硬件设备
 // #define UART_Device UART_HandleTypeDef
 #define UART_Device u8*
@@ -33,9 +40,13 @@ extern "C" {
 #define ROV_STABLE_MEMORY_SPACE __attribute__((section(".RAM_D1")))
 #define ROV_ALIGN(n) __attribute__((aligned(n)))
 
-typedef unsigned   char   u8;                /**<  8bit integer type */
-typedef unsigned   short  u16;               /**< 16bit integer type */
-typedef unsigned   int    u32;               /**< 32bit integer type */
+
+
+
+
+typedef unsigned            char   u8;                /**<  8bit integer type */
+typedef unsigned            short  u16;               /**< 16bit integer type */
+typedef unsigned            int    u32;               /**< 32bit integer type */
 typedef volatile unsigned   char   vu8;      /**<  8bit IO__ integer type */
 typedef volatile unsigned   short  vu16;     /**< 16bit IO__ integer type */
 typedef volatile unsigned   int    vu32;     /**< 32bit IO__ integer type */

@@ -26,14 +26,9 @@
 #define RT_WAITING_FOREVER              -1              /**< Block forever until get resource. */
 #define RT_WAITING_NO                   0               /**< Non-block. */
 
-struct rt_ipc_object
-{
-    struct rt_object parent;                            /**< inherit from rt_object */
-
-    rt_list_t        suspend_thread;                    /**< threads pended on this resource */
-};
-
-
+/**
+ * Semaphore structure
+ */
 struct rt_semaphore
 {
     struct rt_ipc_object parent;                        /**< inherit from ipc_object */

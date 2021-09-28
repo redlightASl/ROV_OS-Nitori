@@ -23,7 +23,6 @@ struct rov_Core
     u8 type;
     u8 flag;
     rov_DoubleList_t core_list; //内核对象链表
-
 };
 typedef struct rov_Core* rov_Core_t; /* 基本内核类 */
 
@@ -33,7 +32,30 @@ struct rov_Core_information
     rov_DoubleList_t object_list;
     u8 object_list_size;
 };
-typedef struct rov_Core_information rov_Core_information_t; /* 内核对象属性 */
+typedef struct rov_Core_information rov_Core_information_t; /* 内核对象属性类 */
+
+struct rov_Timer
+{
+    struct rov_Core parent;
+    rov_DoubleList_t row[1];
+
+    void (*timeout_function)(void *parameter); //超时函数
+    void *parameter; //超时函数参数
+
+    u32 init_tick; //初始时间
+    u32 timeout_tick; //超时时间
+};
+typedef struct rov_Timer *rov_Timer_t; /* 内核定时器类 */
+
+
+struct rt_ipc_object
+{
+    struct rt_object parent;                            /**< inherit from rt_object */
+
+    rt_list_t        suspend_thread;                    /**< threads pended on this resource */
+};
+
+
 
 enum rt_device_class_type
 {

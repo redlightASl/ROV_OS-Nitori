@@ -20,7 +20,7 @@
 
 
 
- //XXX:没什么用的单链表
+//XXX:没什么用的单链表
 struct rov_SingleList
 {
     struct rov_SingleList* next;
@@ -50,7 +50,6 @@ struct rov_Thread
     u8  flags;
 
     void (*thread_handler)(void); //线程句柄
-    // rov_Thread_Status status; //线程状态
     u8 status; //线程状态
 
     /* 链表 */
@@ -65,6 +64,8 @@ struct rov_Thread
     u32 stack_size;
 
     /* 时间片 */
+    void (*timeout_function)(void *parameter); //超时函数
+    void *parameter; //超时函数参数
     u32 thread_init_time; //线程初始化时间片
     u32 thread_remaining_time; //线程剩余时间片
 
@@ -161,69 +162,24 @@ static inline u8 rov_List_len(const rov_DoubleList_t* list)
 
 
 
-
+/*
+ * thread state definitions
+ */
+#define RT_THREAD_INIT                  0x00                /**< Initialized status */
+#define RT_THREAD_READY                 0x01                /**< Ready status */
+#define RT_THREAD_SUSPEND               0x02                /**< Suspend status */
+#define RT_THREAD_RUNNING               0x03                /**< Running status */
+#define RT_THREAD_BLOCK                 RT_THREAD_SUSPEND   /**< Blocked status */
+#define RT_THREAD_CLOSE                 0x04                /**< Closed status */
+#define RT_THREAD_STAT_MASK             0x0f
 
 /**
- * @brief get the struct for this entry
- * @param node the entry point
- * @param type the type of structure
- * @param member the name of list in structure
+ * thread control command definitions
  */
-#define rt_list_entry(node, type, member) \
-    rt_container_of(node, type, member)
-
- /**
-  * rt_list_for_each - iterate over a list
-  * @pos:    the rt_list_t * to use as a loop cursor.
-  * @head:   the head for your list.
-  */
-#define rt_list_for_each(pos, head) \
-    for (pos = (head)->next; pos != (head); pos = pos->next)
-
-  /**
-   * rt_list_for_each_safe - iterate over a list safe against removal of list entry
-   * @pos:    the rt_list_t * to use as a loop cursor.
-   * @n:      another rt_list_t * to use as temporary storage
-   * @head:   the head for your list.
-   */
-#define rt_list_for_each_safe(pos, n, head) \
-    for (pos = (head)->next, n = pos->next; pos != (head); \
-        pos = n, n = pos->next)
-
-   /**
-    * rt_list_for_each_entry  -   iterate over list of given type
-    * @pos:    the type * to use as a loop cursor.
-    * @head:   the head for your list.
-    * @member: the name of the list_struct within the struct.
-    */
-#define rt_list_for_each_entry(pos, head, member) \
-    for (pos = rt_list_entry((head)->next, typeof(*pos), member); \
-         &pos->member != (head); \
-         pos = rt_list_entry(pos->member.next, typeof(*pos), member))
-
-    /**
-     * rt_list_for_each_entry_safe - iterate over list of given type safe against removal of list entry
-     * @pos:    the type * to use as a loop cursor.
-     * @n:      another type * to use as temporary storage
-     * @head:   the head for your list.
-     * @member: the name of the list_struct within the struct.
-     */
-#define rt_list_for_each_entry_safe(pos, n, head, member) \
-    for (pos = rt_list_entry((head)->next, typeof(*pos), member), \
-         n = rt_list_entry(pos->member.next, typeof(*pos), member); \
-         &pos->member != (head); \
-         pos = n, n = rt_list_entry(n->member.next, typeof(*n), member))
-
-     /**
-      * rt_list_first_entry - get the first element from a list
-      * @ptr:    the list head to take the element from.
-      * @type:   the type of the struct this is embedded in.
-      * @member: the name of the list_struct within the struct.
-      *
-      * Note, that list is expected to be not empty.
-      */
-#define rt_list_first_entry(ptr, type, member) \
-    rt_list_entry((ptr)->next, type, member)
+#define RT_THREAD_CTRL_STARTUP          0x00                /**< Startup thread. */
+#define RT_THREAD_CTRL_CLOSE            0x01                /**< Close thread. */
+#define RT_THREAD_CTRL_CHANGE_PRIORITY  0x02                /**< Change thread priority. */
+#define RT_THREAD_CTRL_INFO             0x03                /**< Get thread information. */
 
 
 
@@ -235,11 +191,11 @@ static inline u8 rov_List_len(const rov_DoubleList_t* list)
 
 
 
-void Thread_exec(void);
-void Thread_tick(void);
-void Thread_init(rov_Thread_t thread, void (*thread_handler)(void), u32 id, u32 thread_time_length);
-void Thread_add(rov_Thread_t thread);
-void Thread_delete(rov_Thread_t thread);
+// void Thread_exec(void);
+// void Thread_tick(void);
+// void Thread_init(rov_Thread_t thread, void (*thread_handler)(void), u32 id, u32 thread_time_length);
+// void Thread_add(rov_Thread_t thread);
+// void Thread_delete(rov_Thread_t thread);
 
 
 #endif

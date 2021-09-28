@@ -10,7 +10,7 @@
 .equ    NVIC_PENDSVSET,     0x10000000              /* PendSV中断触发复位值 */
 
 /*
- * rt_base_t rov_interrupt_disable();
+ * u32 rov_interrupt_disable();
  */
 .global rov_interrupt_disable
 .type rov_interrupt_disable, %function
@@ -20,7 +20,7 @@ rov_interrupt_disable:
     BX      LR
 
 /*
- * void rov_interrupt_enable(rt_base_t level);
+ * void rov_interrupt_enable(u32 level);
  */
 .global rov_interrupt_enable
 .type rov_interrupt_enable, %function
@@ -29,7 +29,7 @@ rov_interrupt_enable:
     BX      LR
 
 /*
- * void rov_context_switch(rt_uint32 from, rt_uint32 to);
+ * void rov_context_switch(u32 from, u32 to);
  * r0 --> from
  * r1 --> to
  */
@@ -137,7 +137,7 @@ pendsv_exit:
     BX  lr
 
 /*
- * void rov_context_switch_to(rt_uint32 to);
+ * void rov_context_switch_to(u32 to);
  * r0 --> to
  */
 .global rov_context_switch_to
