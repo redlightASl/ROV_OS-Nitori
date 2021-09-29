@@ -15,6 +15,7 @@
  */
 #ifndef __ROV_ALGORITHM_H
 #define __ROV_ALGORITHM_H
+#include "Port.h"
 #include "Defines.h"
 #include "Setup.h"
 
@@ -77,13 +78,18 @@ struct AttitudeControl
 };
 typedef struct AttitudeControl AttitudeControl_t;
 
-u8 SumCheck(u8* CacString, u8 CacBit);
-u8 CrcCheck(u8* CacString, u8 CacStringSize);
-u8 ParityCheck(u8* CacString, u8 CacStringSize);
+u8 SumCheck(u8* CacString, u8 CalLength, u8 CacBit);
+u8 CrcCheck(u8* CacString, u8 CalLength, u8 CacBit);
+u8 ParityCheck(u8* CacString, u8 CalLength, u8 CacBit);
+u8 XorCheck(u8* CacString, u8 CalLength, u8 CacBit);
+
+u16 KalmanFilter(u16 original_value);
 u16 PositionalPID(u16 target_value,u16 actual_value);
 u16 IncrementalPID(u16 target_value,u16 actual_value);
-u16 KalmanFilter(u16 original_value);
+
 AttitudeControl_t CommonThrusterControl(u16 straight_num, u16 rotate_num, u16 vertical_num, u8 horizental_mode_num, u8 vertical_mode_num);
+
+extern u32 CrcCalculate(u8* CacString, u32 CacStringSize);
 
 #ifdef __cplusplus
 }

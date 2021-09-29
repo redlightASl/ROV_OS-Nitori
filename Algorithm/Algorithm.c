@@ -1,10 +1,59 @@
 #include "Algorithm.h"
 
-static u8 XorCaculate(u8* CacString, u8 CacStringSize);
-static u32 SumCaculate(u8* CacString, u32 CacStringSize);
-static u8 IdTest(u8* String, u8 Format, u8 SendUpLength, u8 SendDownLength);
+static u8 SumCalculate(u8* CacString, u8 CacStringSize);
+static u8 CrcCalculate(u8* CacString, u8 CacStringSize);
+static u8 ParityCalculate(u8* CacString, u8 CacStringSize);
+static u8 XorCalculate(u8* CacString, u8 CacStringSize);
+
+/**
+ * @brief 加和校验
+ * @param  CacString        待校验字符串
+ * @param  CalLength        待校验字符串长度
+ * @param  CacBit           校验位
+ * @return u8 成功返回1，失败返回0
+ */
+u8 SumCheck(u8* CacString, u8 CalLength, u8 CacBit)
+{
+#ifdef DATA_CHECK
+    if (CacString[CacBit] == SumCalculate(CacString, CalLength))
+    {
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
+#else
+    return 1; //不开启奇偶校验时默认成功
+#endif
+}
+
+u8 CrcCheck(u8* CacString, u8 CalLength, u8 CacBit);
+u8 ParityCheck(u8* CacString, u8 CalLength, u8 CacBit);
 
 
+/**
+ * @brief 异或校验
+ * @param  CacString        待校验字符串
+ * @param  CalLength        待校验字符串长度
+ * @param  CacBit           校验位
+ * @return u8 成功返回1，失败返回0
+ */
+u8 XorCheck(u8* CacString, u8 CalLength, u8 CacBit)
+{
+#ifdef DATA_CHECK
+    if (CacString[CacBit] == XorCalculate(CacString, CalLength))
+    {
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
+#else
+    return 1; //不开启奇偶校验时默认成功
+#endif
+}
 
 //TODO：用于定深的卡尔曼滤波
 //NOTE：定深算法
@@ -100,7 +149,51 @@ u16 PositionalPID(u16 target_value, u16 actual_value)
 u16 IncrementalPID(u16 target_value, u16 actual_value)
 {
 #ifdef HARDWARE_ACCELERATE_PID
+    //当前误差
+    static float Ek;
+    //前一次误差
+    static float Ek1;
+    //累计积分位置
+    static float LocSum;
+    //数据清空标志位
+    static u8 PIDData = 0;
 
+    if (ModeType == 4) //定深模式
+    {
+        PIDData = 0;
+        u16 PIDLoc;
+        Ek = (float)(SetValue - ActualValue);
+        LocSum += Ek;
+        PIDLoc =
+            (u16)(1500
+                + BASICCTRL_RANGE(
+                    (int16_t)(PID_D_Kp * Ek + (PID_D_Ki * LocSum) + PID_D_Kd * (Ek1 - Ek)),
+                    -1000, 1000));
+        return PIDLoc;
+    }
+    else if (ModeType == 2) //定向模式
+    {
+        PIDData = 0;
+        u16 PIDLoc;
+        Ek = (float)(SetValue - ActualValue);
+        LocSum += Ek;
+        PIDLoc =
+            (u16)(1500
+                + BASICCTRL_RANGE(
+                    (int16_t)(PID_O_Kp * Ek + (PID_O_Ki * LocSum) + PID_O_Kd * (Ek1 - Ek)),
+                    -1000, 1000));
+        return PIDLoc;
+    }
+    else
+    {
+        if (!PIDData)
+        {
+            PIDData = 1;
+            Ek = 0;
+            LocSum = 0;
+        }
+        return 0;
+    }
 #else
     return 1; //不开启校验时默认成功
 #endif
@@ -127,7 +220,6 @@ AttitudeControl_t CommonThrusterControl(u16 straight_num, u16 rotate_num, u16 ve
         u8 BFlag = ((rotate_num + straight_num) > 3000);
         u8 CFlag = (rotate_num > 1500);
         u8 DFlag = (straight_num > 1500);
-
         u8 SFlag = AFlag << 3 + BFlag << 2 + CFlag << 1 + DFlag;
 
         switch (SFlag)
@@ -168,8 +260,8 @@ AttitudeControl_t CommonThrusterControl(u16 straight_num, u16 rotate_num, u16 ve
         ThrusterTemp.HorizontalThruster_LeftFront = (vu32)(rotate_num);
         ThrusterTemp.HorizontalThruster_LeftRear = (vu32)(3000 - rotate_num);
         break;
-    case MIX_MODE: //TODO:自由翻滚模式
-    
+    case MIX_MODE:
+        //水平推进器保持不动
         break;
     default:
         break;
@@ -203,82 +295,62 @@ AttitudeControl_t CommonThrusterControl(u16 straight_num, u16 rotate_num, u16 ve
         ThrusterTemp.VerticalThruster_LeftRear = (vu32)(3000 - vertical_num);
         break;
     case MIX_MODE: //TODO:自由翻滚模式
+        u8 AFlag = (rotate_num > straight_num);
+        u8 BFlag = ((rotate_num + straight_num) > 3000);
+        u8 CFlag = (rotate_num > 1500);
+        u8 DFlag = (straight_num > 1500);
+        u8 SFlag = AFlag << 3 + BFlag << 2 + CFlag << 1 + DFlag;
 
-    break;
+        switch (SFlag)
+        {
+        case 0b0000:
+        case 0b1111:
+            ThrusterTemp.VerticalThruster_RightFront = (vu32)(rotate_num);
+            ThrusterTemp.VerticalThruster_RightRear = (vu32)(rotate_num);
+            ThrusterTemp.VerticalThruster_LeftFront = (vu32)(1500 - rotate_num + straight_num);
+            ThrusterTemp.VerticalThruster_LeftRear = (vu32)(1500 - rotate_num + straight_num);
+            break;
+        case 0b0111:
+        case 0b1000:
+            ThrusterTemp.VerticalThruster_RightFront = (vu32)(straight_num);
+            ThrusterTemp.VerticalThruster_RightRear = (vu32)(straight_num);
+            ThrusterTemp.VerticalThruster_LeftFront = (vu32)(1500 - rotate_num + straight_num);
+            ThrusterTemp.VerticalThruster_LeftRear = (vu32)(1500 - rotate_num + straight_num);
+            break;
+        case 0b0100:
+        case 0b1010:
+            ThrusterTemp.VerticalThruster_RightFront = (vu32)(rotate_num + straight_num - 1500);
+            ThrusterTemp.VerticalThruster_RightRear = (vu32)(rotate_num + straight_num - 1500);
+            ThrusterTemp.VerticalThruster_LeftFront = (vu32)(straight_num);
+            ThrusterTemp.VerticalThruster_LeftRear = (vu32)(straight_num);
+            break;
+        case 0b0001:
+        case 0b1110:
+            ThrusterTemp.VerticalThruster_RightFront = (vu32)(rotate_num + straight_num - 1500);
+            ThrusterTemp.VerticalThruster_RightRear = (vu32)(rotate_num + straight_num - 1500);
+            ThrusterTemp.VerticalThruster_LeftFront = (vu32)(3000 - rotate_num);
+            ThrusterTemp.VerticalThruster_LeftRear = (vu32)(3000 - rotate_num);
+            break;
+        }
+        break;
     default:
         break;
-}
+        }
 #endif
-
     return ThrusterTemp;
 }
 
-/**
- * @brief 异或运算位检查(奇偶校验)
- * @param  String           待校验的数据
- * @param  Format           上传格式为1；下传格式为0
- * @param  SendUpLength     上传数据长度
- * @param  SendDownLength   下传指令长度
- * @return u8 正确为1；错误为0，如果不开启奇偶校验默认为1
- */
-static u8 IdTest(u8* String, u8 Format, u8 SendUpLength, u8 SendDownLength)
-{
-#ifdef DATA_CHECK
-    if (Format) //上传数据格式
-    {
-        if (*(String + SendUpLength) == XorCaculate(String, SendUpLength))
-        {
-            return 1;
-        }
-        else
-        {
-            return 0;
-        }
-    }
-    else //下传指令格式
-    {
-        if (*(String + SendDownLength) == XorCaculate(String, SendDownLength))
-        {
-            return 1;
-        }
-        else
-        {
-            return 0;
-        }
-    }
-    return 1;
-#else
-    return 1; //不开启奇偶校验时默认成功
-#endif
-}
 
-/**
- * @brief 逐位异或运算
- * @param  CacString        待校验数据
- * @param  CacStringSize    待校验数据长度
- * @return u8 异或运算结果，如果不开启数据校验则默认返回0
- */
-static u8 XorCaculate(u8* CacString, u8 CacStringSize)
-{
-#ifdef DATA_CHECK
-    u8 CacResult = CacString[0];
-    for (u8 i = 0; i < CacStringSize; ++i)
-    {
-        CacResult ^= CacString[i];
-    }
-    return CacResult;
-#else
-    return 0;
-#endif
-}
+
+
 
 /**
  * @brief 逐位加和运算
  * @param  CacString        待校验数据
  * @param  CacStringSize    待校验数据长度
- * @return u32 加和运算结果，如果不开启数据校验则默认返回0
+ * @return u8 加和运算结果，如果不开启数据校验则默认返回1
  */
-static u32 SumCaculate(u8* CacString, u32 CacStringSize)
+static u8 SumCalculate(u8* CacString, u8 CacStringSize)
 {
 #ifdef DATA_CHECK
     u32 CacResult = CacString[0];
@@ -288,6 +360,28 @@ static u32 SumCaculate(u8* CacString, u32 CacStringSize)
     }
     return CacResult;
 #else
-    return 0;
-#endif   
+    return 1;
+#endif
+}
+static u8 CrcCalculate(u8* CacString, u8 CacStringSize);
+static u8 ParityCalculate(u8* CacString, u8 CacStringSize);
+
+/**
+ * @brief 逐位异或运算
+ * @param  CacString        待校验数据
+ * @param  CacStringSize    待校验数据长度
+ * @return u8 异或运算结果，如果不开启数据校验则默认返回1
+ */
+static u8 XorCalculate(u8* CacString, u8 CacStringSize)
+{
+#ifdef DATA_CHECK
+    u8 CacResult = CacString[0];
+    for (u8 i = 0; i < CacStringSize; ++i)
+    {
+        CacResult ^= CacString[i];
+    }
+    return CacResult;
+#else
+    return 1;
+#endif
 }

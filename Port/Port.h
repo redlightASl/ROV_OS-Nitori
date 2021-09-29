@@ -8,7 +8,7 @@ extern "C" {
 
 
 
-
+u32 CrcCalculate(u8* CacString, u32 CacStringSize);
 
 #ifdef __cplusplus
 }
