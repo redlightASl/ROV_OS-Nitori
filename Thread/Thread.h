@@ -20,23 +20,23 @@
 
 
 
-//XXX:没什么用的单链表
+ //XXX:没什么用的单链表
 struct rov_SingleList
 {
     struct rov_SingleList* next;
 };
-typedef struct rov_SingleList rov_SingleList_t; /* 单链表类 */
+typedef struct rov_SingleList rov_SingleList_t; /* 单链表ADT */
 
 
 
 
-
+//XXX:想了一下决定直接照抄rtt的链表ADT实现，因为发现面向对象会降低效率
 struct rov_DoubleList
 {
     struct rov_DoubleList* prev;
     struct rov_DoubleList* next;
 };
-typedef struct rov_DoubleList rov_DoubleList_t; /* 双链表类 */
+typedef struct rov_DoubleList rov_DoubleList_t; /* 双链表ADT */
 
 
 
@@ -52,6 +52,10 @@ struct rov_Thread
     void (*thread_handler)(void); //线程句柄
     u8 status; //线程状态
 
+    /* 优先级 */
+    u8 current_priority; //当前优先级
+    u8 init_priority; //初始优先级
+
     /* 链表 */
     rov_DoubleList_t core_list; //内核对象链表
     rov_DoubleList_t thread_list; //线程链表
@@ -64,14 +68,12 @@ struct rov_Thread
     u32 stack_size;
 
     /* 时间片 */
-    void (*timeout_function)(void *parameter); //超时函数
-    void *parameter; //超时函数参数
+    void (*timeout_function)(void* parameter); //超时函数
+    void* parameter; //超时函数参数
     u32 thread_init_time; //线程初始化时间片
     u32 thread_remaining_time; //线程剩余时间片
 
-    /* 优先级 */
-    u8 current_priority; //当前优先级
-    u8 init_priority; //初始优先级
+
 };
 typedef struct rov_Thread* rov_Thread_t; /* 线程内核类 */
 
@@ -162,24 +164,7 @@ static inline u8 rov_List_len(const rov_DoubleList_t* list)
 
 
 
-/*
- * thread state definitions
- */
-#define RT_THREAD_INIT                  0x00                /**< Initialized status */
-#define RT_THREAD_READY                 0x01                /**< Ready status */
-#define RT_THREAD_SUSPEND               0x02                /**< Suspend status */
-#define RT_THREAD_RUNNING               0x03                /**< Running status */
-#define RT_THREAD_BLOCK                 RT_THREAD_SUSPEND   /**< Blocked status */
-#define RT_THREAD_CLOSE                 0x04                /**< Closed status */
-#define RT_THREAD_STAT_MASK             0x0f
 
-/**
- * thread control command definitions
- */
-#define RT_THREAD_CTRL_STARTUP          0x00                /**< Startup thread. */
-#define RT_THREAD_CTRL_CLOSE            0x01                /**< Close thread. */
-#define RT_THREAD_CTRL_CHANGE_PRIORITY  0x02                /**< Change thread priority. */
-#define RT_THREAD_CTRL_INFO             0x03                /**< Get thread information. */
 
 
 

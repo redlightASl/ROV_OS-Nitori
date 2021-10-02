@@ -46,8 +46,10 @@ typedef unsigned            int         u32;            /**< 32bit integer type 
 typedef volatile unsigned   char        vu8;            /**<  8bit IO__ integer type */
 typedef volatile unsigned   short       vu16;           /**< 16bit IO__ integer type */
 typedef volatile unsigned   int         vu32;           /**< 32bit IO__ integer type */
-typedef float                           f32;            /**< 32bit single float type */
-typedef double                          f64;            /**< 64bit double float type */
+typedef                     float       f32;            /**< 32bit single float type */
+typedef                     double      f64;            /**< 64bit double float type */
+typedef                     long        rov_BaseType;   /**< 64bit basic type for Nitori Core */
+typedef unsigned            long        rov_uBaseType;  /**< 64bit basic type for Nitori Core */
 
 #define U8_MAX                          0xff            /**< Maxium number of u8 */
 #define U16_MAX                         0xffff          /**< Maxium number of u16 */
@@ -79,9 +81,21 @@ typedef enum
 /* 线程状态 */
 typedef enum
 {
-    THREAD_STATUS_RUN,
-    THREAD_STATUS_SHUTDOWN
+    THREAD_STATUS_INIT,
+    THREAD_STATUS_READY,
+    THREAD_STATUS_RUNNING,
+    THREAD_STATUS_SUSPEND,
+    THREAD_STATUS_SHUTDOWN,
+    THREAD_STATUS_CLOSE
 } rov_Thread_Status;
+
+typedef enum
+{
+    THREAD_CTRL_STARTUP,
+    THREAD_CTRL_SHUTDOWN,
+    THREAD_CTRL_CHANGE_PRIORITY,
+    THREAD_CTRL_GET_INFO
+} rov_Thread_Ctrl;
 
 
 /* 硬件设备状态 */
@@ -90,19 +104,21 @@ typedef enum
 
 
 /* 水平推进器模式 */
-enum HorizentalMode {
+typedef enum
+{
     ROTATE_MODE,
     SIDEPUSH_MODE,
     MIX_MODE
-};
+} HorizentalMode;
 
 /* 垂直推进器模式 */
-enum VerticalMode {
+typedef enum
+{
     UPDOWN_MODE,
     ROLL_MODE,
     PITCH_MODE,
     MIX_MODE
-};
+} VerticalMode;
 
 
 

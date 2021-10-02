@@ -1,6 +1,6 @@
 /**
  * @file System.h
- * @brief Nitori内核部分-系统时钟与系统设备
+ * @brief Nitori内核部分-系统内核对象与设备驱动
  * @author RedlightASl (dddbbbdd@foxmail.com)
  * @version 1.0
  * @date 2021-09-18
