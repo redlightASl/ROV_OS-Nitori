@@ -18,6 +18,76 @@
 #include <Defines.h>
 #include <HardwareAccelerate.h>
 
+#define NVIC_INT_CTRL       0xE000ED04      // 中断控制及状态寄存器
+#define NVIC_PENDSVSET      0x10000000      // 触发软件中断的值
+#define NVIC_SYSPRI2        0xE000ED22      // 系统优先级寄存器
+#define NVIC_PENDSV_PRI     0x000000FF      // 配置优先级
+
+/* ARM异常号 */
+#define  OS_CPU_ARM_EXCEPT_RESET                                                                    0x00u
+#define  OS_CPU_ARM_EXCEPT_UNDEF_INSTR                                                              0x01u
+#define  OS_CPU_ARM_EXCEPT_SWI                                                                      0x02u
+#define  OS_CPU_ARM_EXCEPT_PREFETCH_ABORT                                                           0x03u
+#define  OS_CPU_ARM_EXCEPT_DATA_ABORT                                                               0x04u
+#define  OS_CPU_ARM_EXCEPT_ADDR_ABORT                                                               0x05u
+#define  OS_CPU_ARM_EXCEPT_IRQ                                                                      0x06u
+#define  OS_CPU_ARM_EXCEPT_FIQ                                                                      0x07u
+#define  OS_CPU_ARM_EXCEPT_NBR                                                                      0x08u
+/* ARM异常向量地址 */
+#define  OS_CPU_ARM_EXCEPT_RESET_VECT_ADDR              (OS_CPU_ARM_EXCEPT_RESET          * 0x04u + 0x00u)
+#define  OS_CPU_ARM_EXCEPT_UNDEF_INSTR_VECT_ADDR        (OS_CPU_ARM_EXCEPT_UNDEF_INSTR    * 0x04u + 0x00u)
+#define  OS_CPU_ARM_EXCEPT_SWI_VECT_ADDR                (OS_CPU_ARM_EXCEPT_SWI            * 0x04u + 0x00u)
+#define  OS_CPU_ARM_EXCEPT_PREFETCH_ABORT_VECT_ADDR     (OS_CPU_ARM_EXCEPT_PREFETCH_ABORT * 0x04u + 0x00u)
+#define  OS_CPU_ARM_EXCEPT_DATA_ABORT_VECT_ADDR         (OS_CPU_ARM_EXCEPT_DATA_ABORT     * 0x04u + 0x00u)
+#define  OS_CPU_ARM_EXCEPT_ADDR_ABORT_VECT_ADDR         (OS_CPU_ARM_EXCEPT_ADDR_ABORT     * 0x04u + 0x00u)
+#define  OS_CPU_ARM_EXCEPT_IRQ_VECT_ADDR                (OS_CPU_ARM_EXCEPT_IRQ            * 0x04u + 0x00u)
+#define  OS_CPU_ARM_EXCEPT_FIQ_VECT_ADDR                (OS_CPU_ARM_EXCEPT_FIQ            * 0x04u + 0x00u)
+/* ARM异常服务函数地址 */
+#define  OS_CPU_ARM_EXCEPT_RESET_HANDLER_ADDR           (OS_CPU_ARM_EXCEPT_RESET          * 0x04u + 0x20u)
+#define  OS_CPU_ARM_EXCEPT_UNDEF_INSTR_HANDLER_ADDR     (OS_CPU_ARM_EXCEPT_UNDEF_INSTR    * 0x04u + 0x20u)
+#define  OS_CPU_ARM_EXCEPT_SWI_HANDLER_ADDR             (OS_CPU_ARM_EXCEPT_SWI            * 0x04u + 0x20u)
+#define  OS_CPU_ARM_EXCEPT_PREFETCH_ABORT_HANDLER_ADDR  (OS_CPU_ARM_EXCEPT_PREFETCH_ABORT * 0x04u + 0x20u)
+#define  OS_CPU_ARM_EXCEPT_DATA_ABORT_HANDLER_ADDR      (OS_CPU_ARM_EXCEPT_DATA_ABORT     * 0x04u + 0x20u)
+#define  OS_CPU_ARM_EXCEPT_ADDR_ABORT_HANDLER_ADDR      (OS_CPU_ARM_EXCEPT_ADDR_ABORT     * 0x04u + 0x20u)
+#define  OS_CPU_ARM_EXCEPT_IRQ_HANDLER_ADDR             (OS_CPU_ARM_EXCEPT_IRQ            * 0x04u + 0x20u)
+#define  OS_CPU_ARM_EXCEPT_FIQ_HANDLER_ADDR             (OS_CPU_ARM_EXCEPT_FIQ            * 0x04u + 0x20u)
+
+/* CPU SCB寄存器地址 */
+#define SCB_MMAR        (*(volatile const unsigned *)0xE000ED34)        /* 内存管理错误地址寄存器 */
+#define SCB_CFSR_MFSR   (*(volatile const unsigned char*)0xE000ED28)    /* 内存管理错误状态寄存器 */
+#define SCB_BFAR        (*(volatile const unsigned *)0xE000ED38)        /* 总线错误地址寄存器 */
+#define SCB_CFSR_BFSR   (*(volatile const unsigned char*)0xE000ED29)    /* 总线错误状态寄存器 */
+#define SCB_AIRCR       (*(volatile unsigned long *)0xE000ED0C)         /* 复位控制寄存器 */
+#define SCB_RESET_VALUE 0x05FA0004                                      /* 复位值,将它写到SCB_AIRCR可以引起CPU软复位 */
+#define SCB_CFSR        (*(volatile const unsigned *)0xE000ED28)        /* 可配置错误状态寄存器 */
+#define SCB_HFSR        (*(volatile const unsigned *)0xE000ED2C)        /* HardFault状态寄存器 */
+#define SCB_CFSR_UFSR   (*(volatile const unsigned short*)0xE000ED2A)   /* 使用错误状态寄存器 */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
  /*
  主要分成两个部分
  cpu移植函数
@@ -437,45 +507,7 @@ rt_isr_handler_t rt_hw_interrupt_install(int vector, rt_isr_handler_t handler, v
 rt_base_t rt_hw_interrupt_disable(void);
 void rt_hw_interrupt_enable(rt_base_t level);
 
-/* ARM异常号 */
-#define  OS_CPU_ARM_EXCEPT_RESET                                                                    0x00u
-#define  OS_CPU_ARM_EXCEPT_UNDEF_INSTR                                                              0x01u
-#define  OS_CPU_ARM_EXCEPT_SWI                                                                      0x02u
-#define  OS_CPU_ARM_EXCEPT_PREFETCH_ABORT                                                           0x03u
-#define  OS_CPU_ARM_EXCEPT_DATA_ABORT                                                               0x04u
-#define  OS_CPU_ARM_EXCEPT_ADDR_ABORT                                                               0x05u
-#define  OS_CPU_ARM_EXCEPT_IRQ                                                                      0x06u
-#define  OS_CPU_ARM_EXCEPT_FIQ                                                                      0x07u
-#define  OS_CPU_ARM_EXCEPT_NBR                                                                      0x08u
-/* ARM异常向量地址 */
-#define  OS_CPU_ARM_EXCEPT_RESET_VECT_ADDR              (OS_CPU_ARM_EXCEPT_RESET          * 0x04u + 0x00u)
-#define  OS_CPU_ARM_EXCEPT_UNDEF_INSTR_VECT_ADDR        (OS_CPU_ARM_EXCEPT_UNDEF_INSTR    * 0x04u + 0x00u)
-#define  OS_CPU_ARM_EXCEPT_SWI_VECT_ADDR                (OS_CPU_ARM_EXCEPT_SWI            * 0x04u + 0x00u)
-#define  OS_CPU_ARM_EXCEPT_PREFETCH_ABORT_VECT_ADDR     (OS_CPU_ARM_EXCEPT_PREFETCH_ABORT * 0x04u + 0x00u)
-#define  OS_CPU_ARM_EXCEPT_DATA_ABORT_VECT_ADDR         (OS_CPU_ARM_EXCEPT_DATA_ABORT     * 0x04u + 0x00u)
-#define  OS_CPU_ARM_EXCEPT_ADDR_ABORT_VECT_ADDR         (OS_CPU_ARM_EXCEPT_ADDR_ABORT     * 0x04u + 0x00u)
-#define  OS_CPU_ARM_EXCEPT_IRQ_VECT_ADDR                (OS_CPU_ARM_EXCEPT_IRQ            * 0x04u + 0x00u)
-#define  OS_CPU_ARM_EXCEPT_FIQ_VECT_ADDR                (OS_CPU_ARM_EXCEPT_FIQ            * 0x04u + 0x00u)
-/* ARM异常服务函数地址 */
-#define  OS_CPU_ARM_EXCEPT_RESET_HANDLER_ADDR           (OS_CPU_ARM_EXCEPT_RESET          * 0x04u + 0x20u)
-#define  OS_CPU_ARM_EXCEPT_UNDEF_INSTR_HANDLER_ADDR     (OS_CPU_ARM_EXCEPT_UNDEF_INSTR    * 0x04u + 0x20u)
-#define  OS_CPU_ARM_EXCEPT_SWI_HANDLER_ADDR             (OS_CPU_ARM_EXCEPT_SWI            * 0x04u + 0x20u)
-#define  OS_CPU_ARM_EXCEPT_PREFETCH_ABORT_HANDLER_ADDR  (OS_CPU_ARM_EXCEPT_PREFETCH_ABORT * 0x04u + 0x20u)
-#define  OS_CPU_ARM_EXCEPT_DATA_ABORT_HANDLER_ADDR      (OS_CPU_ARM_EXCEPT_DATA_ABORT     * 0x04u + 0x20u)
-#define  OS_CPU_ARM_EXCEPT_ADDR_ABORT_HANDLER_ADDR      (OS_CPU_ARM_EXCEPT_ADDR_ABORT     * 0x04u + 0x20u)
-#define  OS_CPU_ARM_EXCEPT_IRQ_HANDLER_ADDR             (OS_CPU_ARM_EXCEPT_IRQ            * 0x04u + 0x20u)
-#define  OS_CPU_ARM_EXCEPT_FIQ_HANDLER_ADDR             (OS_CPU_ARM_EXCEPT_FIQ            * 0x04u + 0x20u)
 
-/* CPU SCB寄存器地址 */
-#define SCB_CFSR        (*(volatile const unsigned *)0xE000ED28)        /* Configurable Fault Status Register */
-#define SCB_HFSR        (*(volatile const unsigned *)0xE000ED2C)        /* HardFault Status Register */
-#define SCB_MMAR        (*(volatile const unsigned *)0xE000ED34)        /* MemManage Fault Address register */
-#define SCB_BFAR        (*(volatile const unsigned *)0xE000ED38)        /* Bus Fault Address Register */
-#define SCB_AIRCR       (*(volatile unsigned long *)0xE000ED0C)         /* Reset control Address Register */
-#define SCB_RESET_VALUE 0x05FA0004                                      /* Reset value, write to SCB_AIRCR can reset cpu */
-#define SCB_CFSR_MFSR   (*(volatile const unsigned char*)0xE000ED28)    /* Memory-management Fault Status Register */
-#define SCB_CFSR_BFSR   (*(volatile const unsigned char*)0xE000ED29)    /* Bus Fault Status Register */
-#define SCB_CFSR_UFSR   (*(volatile const unsigned short*)0xE000ED2A)   /* Usage Fault Status Register */
 
 u8* rov_thread_stack_init(void* tentry, void* parameter, u8* stack_addr, void* texit)
 {

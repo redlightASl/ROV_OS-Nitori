@@ -16,11 +16,29 @@
 #ifndef __ROV_ALGORITHM_H
 #define __ROV_ALGORITHM_H
 #include "Port.h"
-#include "Defines.h"
+#include <Defines.h>
 #include "Setup.h"
 
 #ifdef __cplusplus
 extern "C" {
+#endif
+
+#ifdef PID_FIXED
+/* 恒定PID参数 */
+//定深比例系数
+#define PID_DEEP_Kp 200
+//定深积分系数
+#define PID_DEEP_Ki 2
+//定深微分系数
+#define PID_DEEP_Kd 300
+//定向比例系数
+#define PID_ORBIT_Kp 200
+//定向积分系数
+#define PID_ORBIT_Ki 2
+//定向微分系数
+#define PID_ORBIT_Kd 300
+#else
+#define PID_ADJUSTABLE //使用上位机下传的参数
 #endif
 
 #define ALGORITHM_MAX(x, y) ({\

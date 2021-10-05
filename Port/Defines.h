@@ -23,7 +23,7 @@
 #define NITORI_REVISION 1L
 #define NITORI_VERSION ((NITORI_VERSION * 10000) + (NITORI_SUBVERSION * 100) + (NITORI_REVISION))
 
-/* 硬件设备 */
+/* 硬件设备数据类型 */
 //串口设备
 // #define UART_Device UART_HandleTypeDef
 #define UART_Device u8*
@@ -39,31 +39,56 @@
 //未知设备
 #define Unknown_Device u8*
 
-/* 数据类型 */
-typedef unsigned            char        u8;             /**<  8bit integer type */
-typedef unsigned            short       u16;            /**< 16bit integer type */
-typedef unsigned            int         u32;            /**< 32bit integer type */
-typedef volatile unsigned   char        vu8;            /**<  8bit IO__ integer type */
-typedef volatile unsigned   short       vu16;           /**< 16bit IO__ integer type */
-typedef volatile unsigned   int         vu32;           /**< 32bit IO__ integer type */
-typedef                     float       f32;            /**< 32bit single float type */
-typedef                     double      f64;            /**< 64bit double float type */
-typedef                     long        rov_BaseType;   /**< 64bit basic type for Nitori Core */
-typedef unsigned            long        rov_uBaseType;  /**< 64bit basic type for Nitori Core */
+/* 编程数据类型 */
+typedef unsigned            char        u8;                     /**<  8bit integer type */
+typedef unsigned            short       u16;                    /**< 16bit integer type */
+typedef unsigned            int         u32;                    /**< 32bit integer type */
+typedef volatile unsigned   char        vu8;                    /**<  8bit IO__ integer type */
+typedef volatile unsigned   short       vu16;                   /**< 16bit IO__ integer type */
+typedef volatile unsigned   int         vu32;                   /**< 32bit IO__ integer type */
+typedef                     float       f32;                    /**< 32bit single float type */
+typedef                     double      f64;                    /**< 64bit double float type */
 
-#define U8_MAX                          0xff            /**< Maxium number of u8 */
-#define U16_MAX                         0xffff          /**< Maxium number of u16 */
-#define U32_MAX                         0xffffffff      /**< Maxium number of u32 */
-#define TICK_MAX                        U32_MAX         /**< Maxium number of sys-tick */
+/* 系统数据类型 */
+typedef                     long        rov_BaseType;           /**< 64bit basic type for Nitori Core */
+typedef unsigned            long        rov_uBaseType;          /**< 64bit basic type for Nitori Core */
+typedef u32                             rov_TaskStackType;      /**< 64bit basic type for Nitori Core */
 
+#define U8_MAX                          0xff                    /**< Maxium number of u8 */
+#define U16_MAX                         0xffff                  /**< Maxium number of u16 */
+#define U32_MAX                         0xffffffff              /**< Maxium number of u32 */
+#define TICK_MAX                        U32_MAX                 /**< Maxium number of sys-tick */
+
+#define ROV_TRUE                        1U                     /**< 真 */
+#define ROV_FALSE                       0U                     /**< 假 */
+#define ROV_NULL                        (0)                    /**< 空 */
+
+/* 寄存器数据类型 */
+#define MEM32(addr)                     *(volatile unsigned long *)(addr)
+#define MEM8(addr)                      *(volatile unsigned char *)(addr)
+
+/* 系统控制类型 */
+#define ROV_ALIGN(size, align)          (((size) + (align) - 1) & ~((align) - 1))
+#define ROV_ALIGN_DOWN(size, align)     ((size)                 & ~((align) - 1))
+
+#if defined (__GNUC__)
 #define ROV_STABLE_MEMORY_SPACE         __attribute__((section(".RAM_D1")))
 #define SECTION(x)                      __attribute__((section(x)))
 #define ROV_UNUSED                      __attribute__((unused))
 #define ROV_USED                        __attribute__((used))
 #define ALIGN(x)                        __attribute__((aligned(x)))
 #define ROV_WEAK                        __attribute__((weak))
-#define ROV_ALIGN(size, align)          (((size) + (align) - 1) & ~((align) - 1))
-#define ROV_ALIGN_DOWN(size, align)     ((size)                 & ~((align) - 1))
+#define ROV_INLINE                      __inline
+#elif defined(__CC_ARM) || defined(__CLANG_ARM)
+#define ROV_STABLE_MEMORY_SPACE         __attribute__((section(".RAM_D1")))
+#define SECTION(x)                      __attribute__((section(x)))
+#define ROV_UNUSED                      __attribute__((unused))
+#define ROV_USED                        __attribute__((used))
+#define ALIGN(x)                        __attribute__((aligned(x)))
+#define ROV_WEAK                        __attribute__((weak))
+#define ROV_INLINE                      __inline
+#endif
+
 
 /* 内核对象类型 */
 typedef enum
