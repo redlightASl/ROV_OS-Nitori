@@ -16,17 +16,17 @@
 #ifndef __ROV_SETUP_H
 #define __ROV_SETUP_H
 
+/* 硬件设置 */
 /* 是否使用FPU */
 #define USING_FPU
+
+/* 推进器数量 */
+#define NUMBER_OF_VERTICAL_THRUSTER 2
+#define NUMBER_OF_HORIZENTAL_THRUSTER 4
 
 /* 选择运行仓位 */
 #define CONTROL_CARBIN //控制仓
 //#define MOVE_CARBIN //PWM仓、电源仓
-
-/* 数据校验开关 */
-#define DATA_CHECK //数据校验总控制
-#define ROV_MESSAGE_DATA_CHECK //上传数据校验
-#define ROV_COMMAND_DATA_CHECK //下传指令校验
 
 /* 硬件加速开关 */
 #define HARDWARE_ACCELERATE_PID
@@ -37,35 +37,42 @@
 #define HARDWARE_ACCELERATE_SUM
 #define HARDWARE_ACCELERATE_SENSOR
 
+/* 内核设置 */
+
+/* 内核名称最大长度 */
+#define NITORI_CORE_NAME_MAX_LENGTH         8
+/* 最大线程优先级 */
+#define	NITORI_MAX_PRIORITY			    	8
+/* 默认线程堆栈大小 */
+#define NITORI_STACK_SIZE_DEFAULT	    	512
+/* 默认线程优先级 */
+#define NITORI_STACK_PRIORITY_DEFAULT	    	3
+/* 时钟节拍的周期，以ms为单位 */
+#define NITORI_SYSTICK_MS                   10 
+/* 每个线程最大运行的时间片计数 */
+#define NITORI_MAX_RUNTIME_SLICE            10
+/* 空闲线程堆栈大小 */
+#define NITORI_IDLETASK_STACK_SIZE	    	512
+
+/* 仅使用线程调度器 */
+// #define NITORI_ONLY_THREAD
+
+
+
+/* 软件设置 */
 /* PID模式 */
 // #define PID_FIXED //恒定参数
-#ifdef PID_FIXED
-/* 恒定PID参数 */
-//定深比例系数
-#define PID_DEEP_Kp 200
-//定深积分系数
-#define PID_DEEP_Ki 2
-//定深微分系数
-#define PID_DEEP_Kd 300
-//定向比例系数
-#define PID_ORBIT_Kp 200
-//定向积分系数
-#define PID_ORBIT_Ki 2
-//定向微分系数
-#define PID_ORBIT_Kd 300
-#else
-#define PID_ADJUSTABLE //使用上位机下传的参数
-#endif
 
-/* 推进器数量 */
-#define NUMBER_OF_VERTICAL_THRUSTER 2
-#define NUMBER_OF_HORIZENTAL_THRUSTER 4
+
+/* 数据校验开关 */
+#define DATA_CHECK //数据校验总控制
+#define ROV_MESSAGE_DATA_CHECK //上传数据校验
+#define ROV_COMMAND_DATA_CHECK //下传指令校验
 
 /* 传感器数据最大长度 */
 #define MAX_LENGTH_OF_SENSOR_DATA 8
 
-/* 内核名称最大长度 */
-#define MAX_LENGTH_OF_CORE_NAME 8
+
 
 
 
