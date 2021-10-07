@@ -31,6 +31,13 @@ struct rov_DoubleList
 };
 typedef struct rov_DoubleList rov_DoubleList_t; /* 双链表ADT */
 
+struct rov_WaitQueue
+{
+    u32 status;
+    rov_DoubleList_t wait_list;
+};
+typedef struct rov_WaitQueue* rov_WaitQueue_t; /* 等待队列ADT */
+
 //TODO:基本内核对象
 struct rov_Core
 {
@@ -48,5 +55,11 @@ struct rov_Core_information
     u8 object_list_size;
 };
 typedef struct rov_Core_information rov_Core_information_t; /* 内核对象属性类 */
+
+
+
+
+
+
 
 #endif

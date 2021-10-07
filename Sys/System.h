@@ -134,26 +134,7 @@ typedef struct rt_device *rt_device_t;
 #define device_write    (dev->write)
 #define device_control  (dev->control)
 
-struct rt_device_ops
-{
-    /* common device interface */
-    rt_err_t  (*init)   (rt_device_t dev);
-    rt_err_t  (*open)   (rt_device_t dev, rt_uint16_t oflag);
-    rt_err_t  (*close)  (rt_device_t dev);
-    rt_size_t (*read)   (rt_device_t dev, rt_off_t pos, void *buffer, rt_size_t size);
-    rt_size_t (*write)  (rt_device_t dev, rt_off_t pos, const void *buffer, rt_size_t size);
-    rt_err_t  (*control)(rt_device_t dev, int cmd, void *args);
-};
 
-/**
- * WaitQueue structure
- */
-struct rt_wqueue
-{
-    rt_uint32_t flag;
-    rt_list_t waiting_list;
-};
-typedef struct rt_wqueue rt_wqueue_t;
 
 struct rt_device
 {

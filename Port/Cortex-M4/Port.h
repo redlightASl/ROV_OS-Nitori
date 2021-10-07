@@ -16,7 +16,6 @@
 #ifndef __ROV_PORT_H
 #define __ROV_PORT_H
 #include <Defines.h>
-#include <HardwareAccelerate.h>
 
 #define NVIC_INT_CTRL       0xE000ED04      // 中断控制及状态寄存器
 #define NVIC_PENDSVSET      0x10000000      // 触发软件中断的值
@@ -87,32 +86,6 @@
 
 
 
-
- /*
- 主要分成两个部分
- cpu移植函数
- 硬件移植函数
-
- cpu移植函数分成两个子部分
-     pendsv相关（线程切换与线程管理）
-         采用独立的.S汇编文件实现
-         因为涉及到RV32指令集的移植，使用独立的汇编文件方便修改
-     中断管理相关
-         采用c内嵌汇编实现
-         因为内容不多且与内核应用联系紧密
-
- 硬件移植函数又分为
-     通用寄存器移植函数
-         直接在Port.h中完成移植即可
-         将通用寄存器以结构体的形式映射到内存，方便汇编-c融合操作
-     DSA寄存器函数
-         专用于硬件加速的外设寄存器与相关应用程序需要在HardwareAccelerate.c、.h文件中
-         单独实现，作为移植的一部分
-     HAL函数
-         面向stm32-HAL库的函数接口，需要在Defines.h中以宏定义形式实现
-     特殊硬件控制函数
-         单独封装在Port.h中供上层程序调用
- */
  /* 异常服务函数表 */
  //TODO:这里预计使用内嵌汇编而不是独立的.S文件
 

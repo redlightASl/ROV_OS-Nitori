@@ -43,6 +43,9 @@
 typedef unsigned            char        u8;                     /**<  8bit integer type */
 typedef unsigned            short       u16;                    /**< 16bit integer type */
 typedef unsigned            int         u32;                    /**< 32bit integer type */
+typedef signed              char        s8;                     /**<  8bit signed integer type */
+typedef signed              short       s16;                    /**< 16bit signed integer type */
+typedef signed              int         s32;                    /**< 32bit signed integer type */
 typedef volatile unsigned   char        vu8;                    /**<  8bit IO__ integer type */
 typedef volatile unsigned   short       vu16;                   /**< 16bit IO__ integer type */
 typedef volatile unsigned   int         vu32;                   /**< 32bit IO__ integer type */
@@ -57,11 +60,12 @@ typedef u32                             rov_TaskStackType;      /**< 64bit basic
 #define U8_MAX                          0xff                    /**< Maxium number of u8 */
 #define U16_MAX                         0xffff                  /**< Maxium number of u16 */
 #define U32_MAX                         0xffffffff              /**< Maxium number of u32 */
+
 #define TICK_MAX                        U32_MAX                 /**< Maxium number of sys-tick */
 
-#define ROV_TRUE                        1U                     /**< 真 */
-#define ROV_FALSE                       0U                     /**< 假 */
-#define ROV_NULL                        (0)                    /**< 空 */
+#define ROV_TRUE                        1U                     /**< True Value */
+#define ROV_FALSE                       0U                     /**< False Value */
+#define ROV_NULL                        (0)                    /**< Null Value */
 
 /* 寄存器数据类型 */
 #define MEM32(addr)                     *(volatile unsigned long *)(addr)
@@ -79,6 +83,7 @@ typedef u32                             rov_TaskStackType;      /**< 64bit basic
 #define ALIGN(x)                        __attribute__((aligned(x)))
 #define ROV_WEAK                        __attribute__((weak))
 #define ROV_INLINE                      __inline
+#define ROV_ALWAYS_INLINE               __attribute__((always_inline))
 #elif defined(__CC_ARM) || defined(__CLANG_ARM)
 #define ROV_STABLE_MEMORY_SPACE         __attribute__((section(".RAM_D1")))
 #define SECTION(x)                      __attribute__((section(x)))
@@ -87,10 +92,11 @@ typedef u32                             rov_TaskStackType;      /**< 64bit basic
 #define ALIGN(x)                        __attribute__((aligned(x)))
 #define ROV_WEAK                        __attribute__((weak))
 #define ROV_INLINE                      __inline
+#define ROV_ALWAYS_INLINE               __attribute__((always_inline))
 #endif
 
 
-/* 内核对象类型 */
+
 typedef enum
 {
     rov_Core_Type_NULL = 0x00,
@@ -101,9 +107,9 @@ typedef enum
     rov_Core_Type_Device = 0x05,
     rov_Core_Type_Unknown = 0x0c,
     rov_Core_Type_Static = 0x80
-} rov_Core_Type;
+} rov_Core_Type; /* 内核对象类型 */
 
-/* 线程状态 */
+
 typedef enum
 {
     THREAD_STATUS_INIT,
@@ -112,7 +118,7 @@ typedef enum
     THREAD_STATUS_SUSPEND,
     THREAD_STATUS_SHUTDOWN,
     THREAD_STATUS_CLOSE
-} rov_Thread_Status;
+} rov_Thread_Status; /* 线程状态 */
 
 typedef enum
 {
@@ -120,32 +126,42 @@ typedef enum
     THREAD_CTRL_SHUTDOWN,
     THREAD_CTRL_CHANGE_PRIORITY,
     THREAD_CTRL_GET_INFO
-} rov_Thread_Ctrl;
+} rov_Thread_Ctrl; /* 线程控制 */
+
+typedef enum
+{
+    DEVICE_CLOSE,
+    DEVICE_OPEN,
+    DEVICE_ERROR,
+    DEVICE_BUSY
+} rov_Devce_Status; /* 硬件设备状态 */
 
 
-/* 硬件设备状态 */
 
 
-
-
-/* 水平推进器模式 */
 typedef enum
 {
     ROTATE_MODE,
     SIDEPUSH_MODE,
     MIX_MODE
-} HorizentalMode;
+} HorizentalMode; /* 水平推进器模式 */
 
-/* 垂直推进器模式 */
+
 typedef enum
 {
     UPDOWN_MODE,
     ROLL_MODE,
     PITCH_MODE,
     MIX_MODE
-} VerticalMode;
+} VerticalMode; /* 垂直推进器模式 */
 
-
+typedef enum
+{
+    PID_IP, //增量整型
+    PID_PP, //位置整型
+    PID_IF, //增量浮点
+    PID_PF //位置浮点
+} rov_Algorithm_Pid; /* PID模式 */
 
 
 

@@ -26,6 +26,7 @@
 
 /* 选择运行仓位 */
 #define CONTROL_CARBIN //控制仓
+
 //#define MOVE_CARBIN //PWM仓、电源仓
 
 /* 硬件加速开关 */
@@ -46,7 +47,7 @@
 /* 默认线程堆栈大小 */
 #define NITORI_STACK_SIZE_DEFAULT	    	512
 /* 默认线程优先级 */
-#define NITORI_STACK_PRIORITY_DEFAULT	    	3
+#define NITORI_STACK_PRIORITY_DEFAULT       3
 /* 时钟节拍的周期，以ms为单位 */
 #define NITORI_SYSTICK_MS                   10 
 /* 每个线程最大运行的时间片计数 */
@@ -54,15 +55,20 @@
 /* 空闲线程堆栈大小 */
 #define NITORI_IDLETASK_STACK_SIZE	    	512
 
-/* 仅使用线程调度器 */
-// #define NITORI_ONLY_THREAD
-
-
+/* 使用线程调度器 */
+#define NITORI_THREAD
+/* 使用内核对象(包括信号量互斥量和消息队列) */
+#ifdef NITORI_THREAD
+#define NITORI_CORE_OBJECT
+#endif
+/* 使用内核设备 */
+#ifdef NITORI_CORE_OBJECT
+#define NITORI_DEVICE
+#endif
 
 /* 软件设置 */
 /* PID模式 */
 // #define PID_FIXED //恒定参数
-
 
 /* 数据校验开关 */
 #define DATA_CHECK //数据校验总控制
