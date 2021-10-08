@@ -15,7 +15,6 @@
  */
 #ifndef __ROV_DEFINES_H
 #define __ROV_DEFINES_H
-#include <Setup.h>
 
  /* 操作系统版本 */
 #define NITORI_VERSION 0L

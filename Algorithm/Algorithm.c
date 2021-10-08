@@ -138,6 +138,7 @@ u16 PositionalPID(u16 target_value, u16 actual_value)
 #endif
 }
 
+//TODO：专用于的PID算法
 u16 IncrementalPID(u16 target_value, u16 actual_value)
 {
 #ifdef HARDWARE_ACCELERATE_PID
