@@ -72,3 +72,21 @@ static ROV_INLINE u8 rov_List_len(const rov_DoubleList_t* list)
     }
     return len;
 }
+
+
+
+
+
+
+
+
+
+
+
+//XXX:照抄rtt
+WEAK void SysTick_Handler(void)
+{
+    rov_interrupt_enter();
+    Systick_increase();
+    rov_interrupt_leave();
+}

@@ -62,19 +62,19 @@ typedef u32                             rov_TaskStackType;      /**< 64bit basic
 
 #define TICK_MAX                        U32_MAX                 /**< Maxium number of sys-tick */
 
-#define ROV_TRUE                        1U                     /**< True Value */
-#define ROV_FALSE                       0U                     /**< False Value */
-#define ROV_NULL                        (0)                    /**< Null Value */
+#define ROV_TRUE                        1U                      /**< True Value */
+#define ROV_FALSE                       0U                      /**< False Value */
+#define ROV_NULL                        (0)                     /**< Null Value */
 
 /* 寄存器数据类型 */
-#define MEM32(addr)                     *(volatile unsigned long *)(addr)
-#define MEM8(addr)                      *(volatile unsigned char *)(addr)
+#define MEM32(addr)                     *(volatile unsigned long *)(addr)  /**< 32bit register */
+#define MEM8(addr)                      *(volatile unsigned char *)(addr)  /**< 8bit register */
 
 /* 系统控制类型 */
 #define ROV_ALIGN(size, align)          (((size) + (align) - 1) & ~((align) - 1))
 #define ROV_ALIGN_DOWN(size, align)     ((size)                 & ~((align) - 1))
 
-#if defined (__GNUC__)
+#if defined (__GNUC__) /* gcc */
 #define ROV_STABLE_MEMORY_SPACE         __attribute__((section(".RAM_D1")))
 #define SECTION(x)                      __attribute__((section(x)))
 #define ROV_UNUSED                      __attribute__((unused))
@@ -83,7 +83,7 @@ typedef u32                             rov_TaskStackType;      /**< 64bit basic
 #define ROV_WEAK                        __attribute__((weak))
 #define ROV_INLINE                      __inline
 #define ROV_ALWAYS_INLINE               __attribute__((always_inline))
-#elif defined(__CC_ARM) || defined(__CLANG_ARM)
+#elif defined(__CC_ARM) || defined(__CLANG_ARM) /* clang */
 #define ROV_STABLE_MEMORY_SPACE         __attribute__((section(".RAM_D1")))
 #define SECTION(x)                      __attribute__((section(x)))
 #define ROV_UNUSED                      __attribute__((unused))
@@ -94,7 +94,8 @@ typedef u32                             rov_TaskStackType;      /**< 64bit basic
 #define ROV_ALWAYS_INLINE               __attribute__((always_inline))
 #endif
 
-
+/* 断言 */
+#define ROV_ASSERT(x)                   if((0) == (x)) {DISABLE_INTERRUPTS();while(1);}
 
 typedef enum
 {

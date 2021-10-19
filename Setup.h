@@ -18,7 +18,12 @@
 
 /* 硬件设置 */
 /* 是否使用FPU */
+#if /* ARMCC */ (  (defined ( __CC_ARM ) && defined ( __TARGET_FPU_VFP ))    \
+    /* Clang */ || (defined ( __CLANG_ARM ) && defined ( __VFP_FP__ ) && !defined(__SOFTFP__)) \
+    /* IAR */   || (defined ( __ICCARM__ ) && defined ( __ARMVFP__ ))        \
+    /* GNU */   || (defined ( __GNUC__ ) && defined ( __VFP_FP__ ) && !defined(__SOFTFP__)) )
 #define USING_FPU
+#endif
 
 /* 推进器数量 */
 #define NUMBER_OF_VERTICAL_THRUSTER 2

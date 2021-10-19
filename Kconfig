@@ -1,0 +1,43 @@
+menu "Nitori ROV-OS Kernel Configuration"
+# 将来可能会用的menuconfig系统
+config NITORI_CORE_NAME_MAX_LENGTH
+    int "The maximal size of kernel object name"
+    range 2 32
+    default 8
+
+config USING_FPU
+    bool "Use core coupled FPU"
+    default y
+    select USING_FPU
+
+config NITORI_MAX_PRIORITY
+    int "The maximal size of kernel object name"
+    range 1 32
+    default 8
+
+menu "Thread"
+
+
+endmenu
+
+menu "Sys"
+
+
+endmenu
+
+menu "Sensor"
+
+
+endmenu
+
+menu "BasicCtrl"
+
+
+endmenu
+
+menu "Algorithm"
+
+
+endmenu
+
+endmenu
