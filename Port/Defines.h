@@ -22,22 +22,6 @@
 #define NITORI_REVISION 1L
 #define NITORI_VERSION ((NITORI_VERSION * 10000) + (NITORI_SUBVERSION * 100) + (NITORI_REVISION))
 
-/* 硬件设备数据类型 */
-//串口设备
-// #define UART_Device UART_HandleTypeDef
-#define UART_Device u8*
-//定时器设备
-// #define TIMER_Device TIM_HandleTypeDef
-#define TIMER_Device u8*
-//SPI设备
-// #define SPI_Device SPI_HandleTypeDef
-#define SPI_Device u8*
-//IIC设备
-// #define IIC_Device IIC_HandleTypeDef
-#define IIC_Device u8*
-//未知设备
-#define Unknown_Device u8*
-
 /* 编程数据类型 */
 typedef unsigned            char        u8;                     /**<  8bit integer type */
 typedef unsigned            short       u16;                    /**< 16bit integer type */
@@ -96,6 +80,25 @@ typedef u32                             rov_TaskStackType;      /**< 64bit basic
 
 /* 断言 */
 #define ROV_ASSERT(x)                   if((0) == (x)) {DISABLE_INTERRUPTS();while(1);}
+
+/* 硬件设备数据类型 */
+#ifdef NITORI_ON_STM32_HAL
+#define UART_Device UART_HandleTypeDef
+#define TIMER_Device TIM_HandleTypeDef
+#define SPI_Device SPI_HandleTypeDef
+#define IIC_Device IIC_HandleTypeDef
+#else
+//串口设备
+#define UART_Device vu32*
+//定时器设备
+#define TIMER_Device vu32*
+//SPI设备
+#define SPI_Device vu32*
+//IIC设备
+#define IIC_Device vu32*
+//未知设备
+#define Unknown_Device vu32*
+#endif
 
 typedef enum
 {

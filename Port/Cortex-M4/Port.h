@@ -231,16 +231,22 @@ extern  "C" {
         rov_exception_hook = exception_handle;
     }
 
-    /**
-     * shutdown CPU
-     */
-    RT_WEAK void rt_hw_cpu_shutdown(void)
-    {
-        rt_kprintf("shutdown...\n");
 
-        RT_ASSERT(0);
+
+
+    /**
+     * @brief 进入死循环
+     * @return ROV_WEAK
+     */
+    ROV_WEAK void rov_cpu_shutdown(void)
+    {
+        ROV_ASSERT(0);
     }
 
+    /**
+     * @brief 软件复位
+     * @return ROV_WEAK
+     */
     ROV_WEAK void rov_cpu_reset(void)
     {
         SCB_AIRCR = SCB_RESET_VALUE;
@@ -356,8 +362,6 @@ extern  "C" {
 
     /* PendSV中断服务函数 */
     //TODO:这里预计使用内嵌汇编而不是独立的.S文件
-
-
     //XXX：freertos的PendSV中断服务函数
 
     /*
@@ -427,126 +431,81 @@ extern  "C" {
             /* *INDENT-ON* */
     }
 
-
-    //XXX：RTT的PendSV中断服务函数
-    /**
-     * @brief PendSV 线程切换函数
+    /* XXX:直接照抄RT-Thread的PendSV中断服务函数
+     * r0 --> switch from thread stack
+     * r1 --> switch to thread stack
+     * psr, pc, lr, r12, r3, r2, r1, r0 are pushed into [from] stack
      */
-    static ROV_INLINE void PendSV_Handler(void)
+    static ROV_INLINE void PendSV_Handler(void);
+    __asm static ROV_INLINE void PendSV_Handler(void)
     {
-        __asm
-        {
-            IMPORT  blockPtr
+        /* 关中断保护线程切换 */
+        MRS r2, PRIMASK
+            CPSID   I
 
-            // 加载寄存器存储地址
-            LDR     R0, =blockPtr
-            LDR     R0, [R0]
-            LDR     R0, [R0]
+            /* 获取rov_thread_switch_interrupt_flag标志位 */
+            LDR r0, =rov_thread_switch_interrupt_flag
+            LDR r1, [r0]
+            CBZ r1, pendsv_exit
 
-            // 保存寄存器
-            STMDB   R0!, { R4 - R11 }
+            /* 清除rov_thread_switch_interrupt_flag标志位 */
+            MOV r1, #0x00
+            STR r1, [r0]
 
-            // 将最后的地址写入到blockPtr中
-            LDR     R1, =blockPtr
-            LDR     R1, [R1]
-            STR     R0, [R1]
+            LDR r0, =rov_interrupt_from_thread
+            LDR r1, [r0]
+            CBZ r1, switch_to_thread
 
-            // // 修改部分寄存器，用于测试
-            // ADD R4, R4, #1
-            // ADD R5, R5, #1
-
-            // 恢复寄存器
-            LDMIA   R0!, { R4 - R11 }
-
-            // 异常返回
-            BX      LR
-
-
-
-
-
-
-
-
-
-
-
-            /* XXX:直接照抄RT-Thread的PendSV中断服务函数
- * r0 --> switch from thread stack
- * r1 --> switch to thread stack
- * psr, pc, lr, r12, r3, r2, r1, r0 are pushed into [from] stack
- */
- .global PendSV_Handler
- .type PendSV_Handler, % function
- PendSV_Handler :
-            /* 关中断保护线程切换 */
-            MRS r2, PRIMASK
-                CPSID   I
-
-                /* 获取rov_thread_switch_interrupt_flag标志位 */
-                LDR r0, =rov_thread_switch_interrupt_flag
-                LDR r1, [r0]
-                CBZ r1, pendsv_exit
-
-                /* 清除rov_thread_switch_interrupt_flag标志位 */
-                MOV r1, #0x00
-                STR r1, [r0]
-
-                LDR r0, =rov_interrupt_from_thread
-                LDR r1, [r0]
-                CBZ r1, switch_to_thread
-
-                MRS r1, psp
+            MRS r1, psp
 
 #if defined (__VFP_FP__) && !defined(__SOFTFP__)
-                TST     lr, #0x10
-                VSTMDBEQ r1!, { d8 - d15 }
+            TST     lr, #0x10
+            VSTMDBEQ r1!, { d8 - d15 }
 #endif
 
-                STMFD   r1!, { r4 - r11 }
+            STMFD   r1!, { r4 - r11 }
 
 #if defined (__VFP_FP__) && !defined(__SOFTFP__)
-                MOV     r4, #0x00
+            MOV     r4, #0x00
 
-                TST     lr, #0x10
-                MOVEQ   r4, #0x01
+            TST     lr, #0x10
+            MOVEQ   r4, #0x01
 
-                STMFD   r1!, { r4 }
+            STMFD   r1!, { r4 }
 #endif
 
-                LDR r0, [r0]
-                STR r1, [r0]
+            LDR r0, [r0]
+            STR r1, [r0]
 
-                switch_to_thread:
-            LDR r1, =rov_interrupt_to_thread
-                LDR r1, [r1]
-                LDR r1, [r1]
+            switch_to_thread:
+        LDR r1, =rov_interrupt_to_thread
+            LDR r1, [r1]
+            LDR r1, [r1]
 
 #if defined (__VFP_FP__) && !defined(__SOFTFP__)
-                LDMFD   r1!, { r3 }
+            LDMFD   r1!, { r3 }
 #endif
 
-                LDMFD   r1!, { r4 - r11 }
+            LDMFD   r1!, { r4 - r11 }
 
 #if defined (__VFP_FP__) && !defined(__SOFTFP__)
-                CMP     r3, #0
-                VLDMIANE  r1!, { d8 - d15 }
+            CMP     r3, #0
+            VLDMIANE  r1!, { d8 - d15 }
 #endif
 
-                MSR psp, r1
+            MSR psp, r1
 
 #if defined (__VFP_FP__) && !defined(__SOFTFP__)
-                ORR     lr, lr, #0x10
-                CMP     r3, #0
-                BICNE   lr, lr, #0x10
+            ORR     lr, lr, #0x10
+            CMP     r3, #0
+            BICNE   lr, lr, #0x10
 #endif
 
-            pendsv_exit:
-            MSR PRIMASK, r2
+        pendsv_exit:
+        MSR PRIMASK, r2
+            ORR lr, lr, #0x04
+            BX  lr
 
-                ORR lr, lr, #0x04
-                BX  lr
-        }
     }
 
 
@@ -559,24 +518,7 @@ extern  "C" {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//XXX:从FreeRTOS照抄的systick函数
+    //XXX:从FreeRTOS照抄的systick函数
     void vPortSetupTimerInterrupt(void);
     __weak void vPortSetupTimerInterrupt(void)
     {
@@ -600,7 +542,7 @@ extern  "C" {
 
 
 
-    
+
     void xPortSysTickHandler(void);
     void xPortSysTickHandler(void)
     {

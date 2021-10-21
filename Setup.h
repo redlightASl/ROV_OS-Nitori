@@ -71,6 +71,9 @@
 #define NITORI_DEVICE
 #endif
 
+/* 基于HAL库 */
+#define NITORI_ON_STM32_HAL
+
 /* 软件设置 */
 /* PID模式 */
 // #define PID_FIXED //恒定参数

@@ -1,9 +1,100 @@
 #include "Algorithm.h"
+#include "HardwareAccelerate.h"
 
-static u8 SumCalculate(u8* CacString, u8 CacStringSize);
-static u8 CrcCalculate(u8* CacString, u8 CacStringSize);
-static u8 ParityCalculate(u8* CacString, u8 CacStringSize);
-static u8 XorCalculate(u8* CacString, u8 CacStringSize);
+#define GET_BIT_N_VAL(data, n) (0x1 & (( *((data) + (n)/8) & (0x1 << ((n)%8)) ) >> ((n)%8)))
+
+/**
+ * @brief 逐位加和运算
+ * @param  CacString        待校验数据
+ * @param  CacStringSize    待校验数据长度
+ * @return u8 加和运算结果，如果不开启数据校验则默认返回1
+ */
+static u8 SumCalculate(u8* CacString, u8 CacStringSize)
+{
+#ifdef DATA_CHECK
+    u32 CacResult = CacString[0];
+    for (u8 i = 0; i < CacStringSize; i++)
+    {
+        CacResult += CacString[i];
+    }
+    return CacResult;
+#else
+    return 1;
+#endif
+}
+
+/**
+ * @brief CRC校验
+ * @param  CacString        待校验数据
+ * @param  CacStringSize    待校验数据长度
+ * @return u8 CRC运算结果，如果不开启数据校验则默认返回1
+ */
+static u8 CrcCalculate(u8* CacString, u8 CacStringSize)
+{
+#ifdef DATA_CHECK
+    u8 CacResult;
+    for (int num = CacStringSize; num > 0; num--)
+    {
+        CacResult = CacResult ^ (*CacString++ << 8);
+        for (u8 i = 0; i < 8; i++)
+        {
+            if (CacResult & 0x8000)
+            {
+                CacResult = (CacResult << 1) ^ 0x1021;
+            }
+            else
+            {
+                CacResult <<= 1;
+            }
+        }
+        CacResult &= 0xFFFF;
+    }
+    return CacResult;
+#else
+    return 1;
+#endif
+}
+
+static u8 ParityCalculate(u8* CacString, u8 CacStringSize)
+{
+#ifdef DATA_CHECK
+    u8 CacResult = 0;
+    for (u8 i = 0; i < CacStringSize; i++)
+    {
+        CacResult += CacResult + GET_BIT_N_VAL((CacString), i);
+    }
+    if (CacResult % 2 == 0)
+    {
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
+#else
+    return 1;
+#endif
+}
+
+/**
+ * @brief 逐位异或运算
+ * @param  CacString        待校验数据
+ * @param  CacStringSize    待校验数据长度
+ * @return u8 异或运算结果，如果不开启数据校验则默认返回1
+ */
+static u8 XorCalculate(u8* CacString, u8 CacStringSize)
+{
+#ifdef DATA_CHECK
+    u8 CacResult = CacString[0];
+    for (u8 i = 0; i < CacStringSize; ++i)
+    {
+        CacResult ^= CacString[i];
+    }
+    return CacResult;
+#else
+    return 1;
+#endif
+}
 
 /**
  * @brief 加和校验
@@ -12,25 +103,46 @@ static u8 XorCalculate(u8* CacString, u8 CacStringSize);
  * @param  CacBit           校验位
  * @return u8 成功返回1，失败返回0
  */
-u8 SumCheck(u8* CacString, u8 CalLength, u8 CacBit)
+ROV_ALWAYS_INLINE u8 SumCheck(u8* CacString, u8 CalLength, u8 CacBit)
 {
 #ifdef DATA_CHECK
-    if (CacString[CacBit] == SumCalculate(CacString, CalLength))
-    {
-        return 1;
-    }
-    else
-    {
-        return 0;
-    }
+    return ((CacString[CacBit] == SumCalculate(CacString, CalLength)) ? 1 : 0);
 #else
     return 1; //不开启奇偶校验时默认成功
 #endif
 }
 
-u8 CrcCheck(u8* CacString, u8 CalLength, u8 CacBit);
-u8 ParityCheck(u8* CacString, u8 CalLength, u8 CacBit);
+/**
+ * @brief CRC校验
+ * @param  CacString        待校验字符串
+ * @param  CalLength        待校验字符串长度
+ * @param  CacBit           校验位
+ * @return u8 成功返回1，失败返回0
+ */
+ROV_ALWAYS_INLINE u8 CrcCheck(u8* CacString, u8 CalLength, u8 CacBit)
+{
+#ifdef DATA_CHECK
+    return ((CacString[CacBit] == CrcCalculate(CacString, CalLength)) ? 1 : 0);
+#else
+    return 1; //不开启奇偶校验时默认成功
+#endif
+}
 
+/**
+ * @brief 奇偶校验
+ * @param  CacString        待校验字符串
+ * @param  CalLength        待校验字符串长度
+ * @param  CacBit           校验位
+ * @return u8 成功返回1，失败返回0
+ */
+ROV_ALWAYS_INLINE u8 ParityCheck(u8* CacString, u8 CalLength, u8 CacBit)
+{
+#ifdef DATA_CHECK
+    return ((CacString[CacBit] == ParityCalculate(CacString, CalLength)) ? 1 : 0);
+#else
+    return 1; //不开启奇偶校验时默认成功
+#endif
+}
 
 /**
  * @brief 异或校验
@@ -39,21 +151,24 @@ u8 ParityCheck(u8* CacString, u8 CalLength, u8 CacBit);
  * @param  CacBit           校验位
  * @return u8 成功返回1，失败返回0
  */
-u8 XorCheck(u8* CacString, u8 CalLength, u8 CacBit)
+ROV_ALWAYS_INLINE u8 XorCheck(u8* CacString, u8 CalLength, u8 CacBit)
 {
 #ifdef DATA_CHECK
-    if (CacString[CacBit] == XorCalculate(CacString, CalLength))
-    {
-        return 1;
-    }
-    else
-    {
-        return 0;
-    }
+    return ((CacString[CacBit] == XorCalculate(CacString, CalLength)) ? 1 : 0);
 #else
     return 1; //不开启奇偶校验时默认成功
 #endif
 }
+
+
+
+
+
+
+
+
+
+
 
 //TODO：用于定深的卡尔曼滤波
 //NOTE：定深算法
@@ -223,7 +338,7 @@ void InitPID(u8 mode, Algorithm_PID_t Pid)
  * @brief 计算PID值并输出
  * @param  Pid              PID结构体
  * @param  feedback         反馈值
- * @return u32 
+ * @return u32
  */
 u32 PIDCal(Algorithm_PID_t Pid, f32 feedback)
 {
@@ -235,7 +350,7 @@ u32 PIDCal(Algorithm_PID_t Pid, f32 feedback)
 
     switch (Pid->mode)
     {
-    //TODO:整型PID
+        //TODO:整型PID
     case PID_IF: //增量浮点型
         Pid->FeedBack = feedback;
         //pid->Error = pid->Ref - pid->FeedBack;
@@ -277,7 +392,7 @@ u32 PIDCal(Algorithm_PID_t Pid, f32 feedback)
             Pid->Output = Pid->MinOutput;
         }
         break;
-    //TODO：PID计算Debug
+        //TODO：PID计算Debug
     case PID_PF: //位置浮点型
         Pid->FeedBack = feedback;
         //pid->Error = pid->Ref - pid->FeedBack;
@@ -469,45 +584,4 @@ AttitudeControl_t CommonThrusterControl(u16 straight_num, u16 rotate_num, u16 ve
     return ThrusterTemp;
 }
 
-/**
- * @brief 逐位加和运算
- * @param  CacString        待校验数据
- * @param  CacStringSize    待校验数据长度
- * @return u8 加和运算结果，如果不开启数据校验则默认返回1
- */
-static u8 SumCalculate(u8* CacString, u8 CacStringSize)
-{
-#ifdef DATA_CHECK
-    u32 CacResult = CacString[0];
-    for (u8 i = 0; i < CacStringSize; i++)
-    {
-        CacResult += CacString[i];
-    }
-    return CacResult;
-#else
-    return 1;
-#endif
-}
 
-static u8 CrcCalculate(u8* CacString, u8 CacStringSize);
-static u8 ParityCalculate(u8* CacString, u8 CacStringSize);
-
-/**
- * @brief 逐位异或运算
- * @param  CacString        待校验数据
- * @param  CacStringSize    待校验数据长度
- * @return u8 异或运算结果，如果不开启数据校验则默认返回1
- */
-static u8 XorCalculate(u8* CacString, u8 CacStringSize)
-{
-#ifdef DATA_CHECK
-    u8 CacResult = CacString[0];
-    for (u8 i = 0; i < CacStringSize; ++i)
-    {
-        CacResult ^= CacString[i];
-    }
-    return CacResult;
-#else
-    return 1;
-#endif
-}

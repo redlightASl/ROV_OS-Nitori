@@ -1,4 +1,4 @@
-#这里是面向Cortex-M4的汇编移植文件
+# 这里是面向Cortex-M4的汇编移植文件
 .cpu cortex-m4
 .syntax unified
 .thumb
@@ -11,10 +11,6 @@
 .equ    NVIC_SYSPRI14,      0xE000ED22              /* 系统优先级寄存器 (14) */
 .equ    NVIC_PENDSV_PRI,    0x00FF0000              /* PendSV中断优先级 (设置为最低) */
 .equ    NVIC_PENDSVSET,     0x10000000              /* PendSV中断触发复位值 */
-
-
-
-
 
 //来自ucosii的汇编
     .extern  OSRunning                                          @ External references
@@ -43,17 +39,6 @@
 
 
 //来自ucosii的汇编
-@********************************************************************************************************
-@                                   FLOATING POINT REGISTERS POP
-@                             void  OS_CPU_FP_Reg_Pop (OS_STK  *stkPtr)
-@
-@ Note(s) : 1) This function restores S16-S31 of the Floating Point Unit.
-@
-@           2) Pseudo-code is:
-@              a) Restore regs S16-S31 of new process stack;
-@              b) Update OSTCBHighRdy->OSTCBStkPtr pointer of new proces stack;
-@********************************************************************************************************
-
 
 /**
  * rov_float_register_pop()
@@ -64,26 +49,11 @@
 .type rov_float_register_pop, %function
 rov_float_register_pop:
     VLDMIA  r0!, {S16-S31} /* 把寄存器值存储到新线程栈 */
-    LDR     r1, =OSTCBHighRdy //TODO：OSTCBHighRdy
+    LDR     r1, =OSTCBHighRdy //TODO：更新OSTCBHighRdy->OSTCBStkPtr到新的线程栈
     LDR     r2, [r1]
     STR     r0, [r2]
     BX      LR
 #endif
-
-
-
-
-
-@********************************************************************************************************
-@                                   FLOATING POINT REGISTERS PUSH
-@                             void  OS_CPU_FP_Reg_Push (OS_STK  *stkPtr)
-@
-@ Note(s) : 1) This function saves S16-S31 registers of the Floating Point Unit.
-@
-@           2) Pseudo-code is:
-@              a) Push remaining FPU regs S16-S31 on process stack;
-@              b) Update OSTCBCur->OSTCBStkPtr;
-@********************************************************************************************************
 
 
 /**
@@ -94,25 +64,16 @@ rov_float_register_pop:
 .global rov_float_register_push
 .type rov_float_register_push, %function
 rov_float_register_push:
-    MRS     r1, PSP                                             @ PSP is process stack pointer
-    CBZ     r1, OS_CPU_FP_nosave                                @ Skip FP register save the first time
+    MRS     r1, PSP //PSP即线程SP
+    CBZ     r1, OS_CPU_FP_nosave //第一次跳过FPU寄存器保存
 
-    VSTMDB  r0!, {S16-S31}
-    LDR     r1, =OSTCBCur //TODO:OSTCBCur
+    VSTMDB  r0!, {S16-S31} /* FPU寄存器压栈 */
+    LDR     r1, =OSTCBCur //TODO:更新OSTCBCur->OSTCBStkPtr
     LDR     r2, [r1]
     STR     r0, [r2]
 OS_CPU_FP_nosave:
     BX      LR
 #endif
-
-
-
-
-
-
-
-
-
 
 
 /*
@@ -135,62 +96,6 @@ rov_interrupt_disable:
 rov_interrupt_enable:
     MSR     PRIMASK, r0
     BX      LR
-
-
-   
-
-
-
-
-
-
-
-
-
-
-.thumb_func
-OS_CPU_SR_Save:
-    CPSID   I                                   @ Cortex-M7 errata notice. See Note #2
-    PUSH   {R1}
-    MRS     R1, BASEPRI
-    MSR     BASEPRI, R0
-    DSB
-    ISB
-    MOV     R0, R1
-    POP    {R1}
-    CPSIE   I
-    BX      LR
-
-.thumb_func
-OS_CPU_SR_Restore:
-    CPSID   I                                   @ Cortex-M7 errata notice. See Note #2
-    MSR     BASEPRI, R0
-    DSB
-    ISB
-    CPSIE   I
-    BX      LR
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -235,81 +140,7 @@ _reswitch:
 
 
 
-/* XXX:直接照抄RT-Thread的PendSV中断服务函数
- * r0 --> switch from thread stack
- * r1 --> switch to thread stack
- * psr, pc, lr, r12, r3, r2, r1, r0 are pushed into [from] stack
- */
-.global PendSV_Handler
-.type PendSV_Handler, %function
-PendSV_Handler:
-    /* 关中断保护线程切换 */
-    MRS r2, PRIMASK
-    CPSID   I
 
-    /* 获取rov_thread_switch_interrupt_flag标志位 */
-    LDR r0, =rov_thread_switch_interrupt_flag
-    LDR r1, [r0]
-    CBZ r1, pendsv_exit
-
-    /* 清除rov_thread_switch_interrupt_flag标志位 */
-    MOV r1, #0x00
-    STR r1, [r0]
-
-    LDR r0, =rov_interrupt_from_thread
-    LDR r1, [r0]
-    CBZ r1, switch_to_thread
-
-    MRS r1, psp
-    
-#if defined (__VFP_FP__) && !defined(__SOFTFP__)
-    TST     lr, #0x10 
-    VSTMDBEQ r1!, {d8 - d15}
-#endif
-    
-    STMFD   r1!, {r4 - r11}
-
-#if defined (__VFP_FP__) && !defined(__SOFTFP__)
-    MOV     r4, #0x00
-
-    TST     lr, #0x10
-    MOVEQ   r4, #0x01
-
-    STMFD   r1!, {r4} 
-#endif
-
-    LDR r0, [r0]
-    STR r1, [r0]
-
-switch_to_thread:
-    LDR r1, =rov_interrupt_to_thread
-    LDR r1, [r1]
-    LDR r1, [r1] 
-
-#if defined (__VFP_FP__) && !defined(__SOFTFP__)
-    LDMFD   r1!, {r3} 
-#endif
-
-    LDMFD   r1!, {r4 - r11}
-
-#if defined (__VFP_FP__) && !defined(__SOFTFP__)
-    CMP     r3,  #0
-    VLDMIANE  r1!, {d8 - d15}
-#endif
-
-    MSR psp, r1
-
-#if defined (__VFP_FP__) && !defined(__SOFTFP__)
-    ORR     lr, lr, #0x10 
-    CMP     r3,  #0   
-    BICNE   lr, lr, #0x10   
-#endif
-
-pendsv_exit:
-    MSR PRIMASK, r2
-
-    ORR lr, lr, #0x04
-    BX  lr
 
 
 
@@ -569,3 +400,8 @@ OS_CPU_PendSVHandler:
     BX      LR                                                  @ Exception return will restore remaining context
 
 .end
+
+
+
+
+    
