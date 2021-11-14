@@ -16,6 +16,8 @@
 #ifndef __ROV_CORE_H
 #define __ROV_CORE_H
 #include "Defines.h"
+#include "Setup.h"
+
 
 //XXX:链表部分已经完成
 struct rov_SingleList

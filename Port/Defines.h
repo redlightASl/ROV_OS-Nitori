@@ -133,13 +133,35 @@ typedef enum
 
 typedef enum
 {
+    SEMAPHOR_STATUS_INIT,
+    SEMAPHOR_STATUS_HANG,
+    SEMAPHOR_STATUS_SUSPEND,
+    SEMAPHOR_STATUS_RECEIVED
+} rov_Semaphore_Status; /* 信号量状态 */
+
+typedef enum
+{
+    MUTEX_STATUS_INIT,
+    MUTEX_STATUS_HANG,
+    MUTEX_STATUS_SUSPEND,
+    MUTEX_STATUS_RECEIVED
+} rov_Mutex_Status; /* 互斥量状态 */
+
+typedef enum
+{
+    QUEUE_STATUS_INIT,
+    QUEUE_STATUS_EMPTY,
+    QUEUE_STATUS_FULL,
+    QUEUE_STATUS_
+} rov_Queue_Status; /* 队列状态 */
+
+typedef enum
+{
     DEVICE_CLOSE,
     DEVICE_OPEN,
     DEVICE_ERROR,
     DEVICE_BUSY
 } rov_Devce_Status; /* 硬件设备状态 */
-
-
 
 
 typedef enum
