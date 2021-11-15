@@ -85,6 +85,7 @@ extern  "C" {
     /* 异常钩子函数 */
     static u8(*rov_exception_hook)(void* context) = 0;
 
+    /* 异常栈（用于保存线程切换时的寄存器） */
     struct exception_stack_frame
     {
         u32 r0;
@@ -95,8 +96,9 @@ extern  "C" {
         u32 lr;
         u32 pc;
         u32 psr;
-    };
+    } ROV_NO_OPTIMIZE;
 
+    /* FPU异常栈 */
     struct fpu_exception_stack_frame
     {
         u32 r0;
@@ -129,9 +131,10 @@ extern  "C" {
         u32 FPSCR;
         u32 NO_NAME;
 #endif
-    };
+    } ROV_NO_OPTIMIZE;
 
-    struct task_stack_frame
+    /* 线程栈 */
+    struct thread_stack_frame
     {
 #ifdef USING_FPU
         u32 flag;
@@ -147,9 +150,10 @@ extern  "C" {
         u32 r11;
 
         struct exception_stack_frame exception_stack_frame;
-    };
+    } ROV_NO_OPTIMIZE;
 
-    struct fpu_task_stack_frame
+    /* FPU线程栈 */
+    struct fpu_thread_stack_frame
     {
         u32 flag;
 
@@ -184,13 +188,39 @@ extern  "C" {
 #endif
 
         struct fpu_exception_stack_frame exception_stack_frame;
-    };
+    } ROV_NO_OPTIMIZE;
 
+    /* 异常信息 */
     struct exception_info
     {
         u32 exc_return;
         struct task_stack_frame stack_frame;
-    };
+    } ROV_NO_OPTIMIZE;
+
+    /**
+     * @brief 进入死循环
+     * @return ROV_WEAK
+     */
+    ROV_WEAK void rov_cpu_shutdown(void)
+    {
+        ROV_ASSERT(0);
+    }
+
+    /**
+     * @brief 软件复位
+     * @return ROV_WEAK
+     */
+    ROV_WEAK void rov_cpu_reset(void)
+    {
+        SCB_AIRCR = SCB_RESET_VALUE;
+    }
+
+
+
+
+
+
+
 
     u8* rov_thread_stack_init(void* task_entry, void* parameter, u8* stack_addr, void* texit)
     {
@@ -234,23 +264,7 @@ extern  "C" {
 
 
 
-    /**
-     * @brief 进入死循环
-     * @return ROV_WEAK
-     */
-    ROV_WEAK void rov_cpu_shutdown(void)
-    {
-        ROV_ASSERT(0);
-    }
 
-    /**
-     * @brief 软件复位
-     * @return ROV_WEAK
-     */
-    ROV_WEAK void rov_cpu_reset(void)
-    {
-        SCB_AIRCR = SCB_RESET_VALUE;
-    }
 
 
 

@@ -83,7 +83,10 @@ static ROV_INLINE u8 rov_List_len(const rov_DoubleList_t* list)
 
 
 
-//XXX:照抄rtt
+/**
+ * @brief systick中断处理函数
+ * @return WEAK void 无返回值
+ */
 WEAK void SysTick_Handler(void)
 {
     rov_interrupt_enter();

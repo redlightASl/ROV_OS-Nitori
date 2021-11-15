@@ -224,12 +224,12 @@ ROV_ALWAYS_INLINE u8 XorCheck(u8* CacString, u8 CalLength, u8 CacBit)
 //         x_now = x_mid + kg * (z_measure - x_mid);//估计出的最优值
 //         p_now = (1 - kg) * p_mid;//最优值对应的covariance
 
-//         printf("Real     position: %6.3f \n", z_real);  //显示真值
-//         printf("Mesaured position: %6.3f [diff:%.3f]\n", z_measure, fabs(z_real - z_measure));  //显示测量值以及真值与测量值之间的误差
-//         printf("Kalman   position: %6.3f [diff:%.3f]\n", x_now, fabs(z_real - x_now));  //显示kalman估计值以及真值和卡尔曼估计值的误差
+//         printf("Real     position: %6.3f \n", z_real); //显示真值
+//         printf("Mesaured position: %6.3f [diff:%.3f]\n", z_measure, fabs(z_real - z_measure)); //显示测量值以及真值与测量值之间的误差
+//         printf("Kalman   position: %6.3f [diff:%.3f]\n", x_now, fabs(z_real - x_now)); //显示kalman估计值以及真值和卡尔曼估计值的误差
 
-//         sumerror_kalman += fabs(z_real - x_now);  //kalman估计值的累积误差
-//         sumerror_measure += fabs(z_real - z_measure);  //真值与测量值的累积误差
+//         sumerror_kalman += fabs(z_real - x_now); //kalman估计值的累积误差
+//         sumerror_measure += fabs(z_real - z_measure); //真值与测量值的累积误差
 //         p_last = p_now;  //更新covariance值
 //         x_last = x_now;  //更新系统状态值
 //     }

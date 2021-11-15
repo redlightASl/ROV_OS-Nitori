@@ -2,6 +2,131 @@
 #include "System.h"
 
 
+//XXX:照抄rtt的main线程机制
+void rt_application_init(void);
+void rt_hw_board_init(void);
+int rtthread_startup(void);
+
+#ifdef __ARMCC_VERSION
+extern int $Super$$main(void);
+/* re-define main function */
+int $Sub$$main(void)
+{
+    rtthread_startup();
+    return 0;
+}
+#elif defined(__ICCARM__)
+extern int main(void);
+/* __low_level_init will auto called by IAR cstartup */
+extern void __iar_data_init3(void);
+int __low_level_init(void)
+{
+    // call IAR table copy function.
+    __iar_data_init3();
+    rtthread_startup();
+    return 0;
+}
+#elif defined(__GNUC__)
+/* Add -eentry to arm-none-eabi-gcc argument */
+int entry(void)
+{
+    rtthread_startup();
+    return 0;
+}
+#endif
+
+#ifndef RT_USING_HEAP
+/* if there is not enable heap, we should use static thread and stack. */
+ALIGN(8)
+static rt_uint8_t main_stack[RT_MAIN_THREAD_STACK_SIZE];
+struct rt_thread main_thread;
+#endif /* RT_USING_HEAP */
+
+/* 进入main线程 */
+void main_thread_entry(void *parameter)
+{
+    extern int main(void);
+
+    /* 初始化外设驱动组件 */
+
+    /* 进入main线程 */
+#ifdef __ARMCC_VERSION
+    {
+        extern int $Super$$main(void);
+        $Super$$main(); /* for ARMCC. */
+    }
+#elif defined(__ICCARM__) || defined(__GNUC__) || defined(__TASKING__)
+    main();
+#endif
+}
+
+
+/* 创建用户main线程 */
+void rt_application_init(void)
+{
+    rt_thread_t tid;
+
+#ifdef RT_USING_HEAP
+    tid = rt_thread_create("main", main_thread_entry, RT_NULL,
+                           RT_MAIN_THREAD_STACK_SIZE, RT_MAIN_THREAD_PRIORITY, 20);
+    RT_ASSERT(tid != RT_NULL);
+#else
+    rt_err_t result;
+
+    tid = &main_thread;
+    result = rt_thread_init(tid, "main", main_thread_entry, RT_NULL,
+                            main_stack, sizeof(main_stack), RT_MAIN_THREAD_PRIORITY, 20);
+    RT_ASSERT(result == RT_EOK);
+
+    /* if not define RT_USING_HEAP, using to eliminate the warning */
+    (void)result;
+#endif /* RT_USING_HEAP */
+
+    rt_thread_startup(tid);
+}
+
+
+
+
+int system_init(void)
+{
+    /* 关闭中断 */
+    rt_hw_interrupt_disable();
+
+    /* 初始化硬件 */
+    rt_hw_board_init();
+
+    /* 串口输出版本信息和硬件数据 */
+    rt_show_version();
+
+    /* 初始化系统时钟 */
+    rt_system_timer_init();
+
+    /* 初始化线程调度器 */
+    rt_system_scheduler_init();
+
+    /* 信号量初始化 */
+    rt_system_signal_init();
+
+    /* 创建用户main线程 */
+    rt_application_init();
+
+    /* 创建定时器线程 */
+    rt_system_timer_thread_init();
+
+    /* 创建空闲线程 */
+    rt_thread_idle_init();
+
+    /* 启动线程调度器 */
+    rt_system_scheduler_start();
+
+    /* 不会运行至此 */
+    return 0;
+}
+
+
+
+
 
 
 

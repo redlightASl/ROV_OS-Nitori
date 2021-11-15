@@ -55,6 +55,7 @@ typedef u32                             rov_TaskStackType;      /**< 64bit basic
 #define MEM8(addr)                      *(volatile unsigned char *)(addr)  /**< 8bit register */
 
 /* 系统控制类型 */
+#define ROV_STACK_ALIGN_SIZE            sizeof(u32)
 #define ROV_ALIGN(size, align)          (((size) + (align) - 1) & ~((align) - 1))
 #define ROV_ALIGN_DOWN(size, align)     ((size)                 & ~((align) - 1))
 
@@ -67,6 +68,7 @@ typedef u32                             rov_TaskStackType;      /**< 64bit basic
 #define ROV_WEAK                        __attribute__((weak))
 #define ROV_INLINE                      __inline
 #define ROV_ALWAYS_INLINE               __attribute__((always_inline))
+#define ROV_NO_OPTIMIZE                 __attribute__((packed))
 #elif defined(__CC_ARM) || defined(__CLANG_ARM) /* clang */
 #define ROV_STABLE_MEMORY_SPACE         __attribute__((section(".RAM_D1")))
 #define SECTION(x)                      __attribute__((section(x)))
@@ -76,6 +78,7 @@ typedef u32                             rov_TaskStackType;      /**< 64bit basic
 #define ROV_WEAK                        __attribute__((weak))
 #define ROV_INLINE                      __inline
 #define ROV_ALWAYS_INLINE               __attribute__((always_inline))
+#define ROV_NO_OPTIMIZE                 __attribute__((packed))
 #endif
 
 /* 断言 */
