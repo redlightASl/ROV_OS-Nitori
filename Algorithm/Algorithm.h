@@ -17,6 +17,7 @@
 #define __ROV_ALGORITHM_H
 #include <Port.h>
 #include <Defines.h>
+#include <HardwareAccelerate.h>
 #include <math.h>
 
 #ifdef __cplusplus
@@ -78,16 +79,16 @@ extern "C" {
 
 	struct AttitudeControl
 	{
-		vu32 HorizontalThruster_RightFront;
-		vu32 HorizontalThruster_RightRear;
-		vu32 HorizontalThruster_LeftFront;
-		vu32 HorizontalThruster_LeftRear;
-		vu32 VerticalThruster_RightFront;
-		vu32 VerticalThruster_RightRear;
-		vu32 VerticalThruster_LeftFront;
-		vu32 VerticalThruster_LeftRear;
+		vu32 HorizontalThruster_RightFront; //右前方水平推进器
+		vu32 HorizontalThruster_RightRear; //右后方水平推进器
+		vu32 HorizontalThruster_LeftFront; //左前方水平推进器
+		vu32 HorizontalThruster_LeftRear; //左后方水平推进器
+		vu32 VerticalThruster_RightFront; //右前方垂直推进器
+		vu32 VerticalThruster_RightRear; //右后方垂直推进器
+		vu32 VerticalThruster_LeftFront; //左前方垂直推进器
+		vu32 VerticalThruster_LeftRear; //左后方垂直推进器
 	};
-	typedef struct AttitudeControl AttitudeControl_t;
+	typedef struct AttitudeControl AttitudeControl_t; /* 姿态控制ADT */
 
 	struct Algorithm_PID
 	{
@@ -150,11 +151,11 @@ extern "C" {
 
 	AttitudeControl_t CommonThrusterControl(u16 straight_num, u16 rotate_num, u16 vertical_num, u8 horizental_mode_num, u8 vertical_mode_num);
 
-	
+
 
 	void InitPID(u8 mode, Algorithm_PID_t Pid);
 	u32 PIDCal(Algorithm_PID_t Pid, f32 feedback);
-	
+
 #ifdef __cplusplus
 }
 #endif

@@ -1,23 +1,78 @@
 menu "Nitori ROV-OS Kernel Configuration"
 # 将来可能会用的menuconfig系统
+
+config RT_VER_NUM
+    hex
+    default 0x40004
+    help
+        RT-Thread version number
+        
+menu "Core"
 config NITORI_CORE_NAME_MAX_LENGTH
-    int "The maximal size of kernel object name"
+    int "内核对象名称最大长度"
     range 2 32
     default 8
 
 config USING_FPU
-    bool "Use core coupled FPU"
+    bool "使用内核耦合的FPU"
     default y
     select USING_FPU
 
-config NITORI_MAX_PRIORITY
-    int "The maximal size of kernel object name"
-    range 1 32
-    default 8
+config NITORI_THREAD
+    bool "使用线程调度器"
+    default y
+    select NITORI_THREAD
+
+config NITORI_CORE_OBJECT
+    bool "使用内核对象"
+    default y
+    select NITORI_CORE_OBJECT
+    help
+        包括信号量互斥量和消息队列
+
+config NITORI_DEVICE
+    bool "使用内核设备"
+    default y
+    select NITORI_DEVICE
+
+
+endmenu
 
 menu "Thread"
 
 
+config NITORI_STACK_SIZE_DEFAULT
+    int "默认线程栈大小"
+    range 256 1024
+    default 512
+
+config NITORI_THREAD_PRIORITY_DEFAULT
+    int "默认线程优先级"
+    range 1 32
+    default 3
+
+config NITORI_MAX_THREAD_PRIORITY
+    int "最大线程优先级"
+    range 1 32
+    default 8
+
+config NITORI_SYSTICK_MS
+    int "系统时钟周期"
+    range 10
+    default 1 1000
+    help
+        ms
+
+config NITORI_MAX_RUNTIME_SLICE
+    int "每个线程最大运行的时间片计数"
+    range 5 100
+    default 10
+
+config NITORI_IDLETASK_STACK_SIZE
+    int "空闲线程栈大小"
+    range
+    default
+        
 endmenu
 
 menu "Sys"
@@ -26,7 +81,15 @@ menu "Sys"
 endmenu
 
 menu "Sensor"
+config NITORI_ON_STM32_HAL
+    bool "基于HAL库"
+    default y
+    select NITORI_ON_STM32_HAL
 
+config MAX_LENGTH_OF_SENSOR_DATA
+    int "传感器数据最大长度"
+    range 4 64
+    default 16
 
 endmenu
 
@@ -36,7 +99,25 @@ menu "BasicCtrl"
 endmenu
 
 menu "Algorithm"
+config PID_FIXED
+    bool "PID恒定参数"
+    default n
+    select PID_FIXED
 
+config DATA_CHECK
+    bool "数据校验总控制"
+    default y
+    select DATA_CHECK
+
+config ROV_MESSAGE_DATA_CHECK
+    bool "上传数据校验"
+    default y
+    select ROV_MESSAGE_DATA_CHECK
+
+config ROV_COMMAND_DATA_CHECK
+    bool "下传指令校验"
+    default y
+    select ROV_COMMAND_DATA_CHECK
 
 endmenu
 

@@ -12,8 +12,7 @@
 .equ    NVIC_PENDSV_PRI,    0x00FF0000              /* PendSV中断优先级 (设置为最低) */
 .equ    NVIC_PENDSVSET,     0x10000000              /* PendSV中断触发复位值 */
 
-//来自ucosii的汇编
-    .extern  OSRunning                                          @ External references
+    .extern  OSRunning
     .extern  OSPrioCur
     .extern  OSPrioHighRdy
     .extern  OSTCBCur
@@ -24,7 +23,7 @@
     .extern  OS_KA_BASEPRI_Boundary
 
 
-    .global  OSStartHighRdy                                     @ Functions declared in this file
+    .global  OSStartHighRdy
     .global  OS_CPU_SR_Save
     .global  OS_CPU_SR_Restore
     .global  OSCtxSw
@@ -36,10 +35,6 @@
     .global  OS_CPU_FP_Reg_Pop
 #endif
 
-
-
-//来自ucosii的汇编
-
 /**
  * rov_float_register_pop()
  * FPU寄存器出栈
@@ -49,7 +44,7 @@
 .type rov_float_register_pop, %function
 rov_float_register_pop:
     VLDMIA  r0!, {S16-S31} /* 把寄存器值存储到新线程栈 */
-    LDR     r1, =OSTCBHighRdy //TODO：更新OSTCBHighRdy->OSTCBStkPtr到新的线程栈
+    LDR     r1, =OSTCBHighRdy //更新OSTCBHighRdy->OSTCBStkPtr到新的线程栈
     LDR     r2, [r1]
     STR     r0, [r2]
     BX      LR
@@ -65,16 +60,18 @@ rov_float_register_pop:
 .type rov_float_register_push, %function
 rov_float_register_push:
     MRS     r1, PSP //PSP即线程SP
-    CBZ     r1, OS_CPU_FP_nosave //第一次跳过FPU寄存器保存
+    CBZ     r1, _FLOAT_REGISTER_NO_SAVE //第一次跳过FPU寄存器保存
 
     VSTMDB  r0!, {S16-S31} /* FPU寄存器压栈 */
-    LDR     r1, =OSTCBCur //TODO:更新OSTCBCur->OSTCBStkPtr
+    LDR     r1, =OSTCBCur //更新OSTCBCur->OSTCBStkPtr
     LDR     r2, [r1]
     STR     r0, [r2]
-OS_CPU_FP_nosave:
+_FLOAT_REGISTER_NO_SAVE:
     BX      LR
 #endif
 
+
+//TODO:优化线程切换函数
 /*
  * rov_context_switch(from, to);
  * rov_context_switch_interrupt(from, to);
@@ -109,22 +106,10 @@ _reswitch:
     STR r1, [r0]
     BX  LR
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 /*
  * rov_context_switch_to(to);
  * r0 --> to
+ * 无源头切换线程
  */
 .global rov_context_switch_to
 .type rov_context_switch_to, %function
@@ -179,7 +164,7 @@ rov_context_switch_to:
 
 
 
-
+//TODO:pendsv中断处理函数优化
 //ucosii的pendsv中断服务函数
 @********************************************************************************************************
 @                                       HANDLE PendSV EXCEPTION
@@ -276,4 +261,270 @@ OS_CPU_PendSVHandler:
 
 
 
+//来自atomthreads的pendsv中断处理函数
+.global pend_sv_handler
+.func   pend_sv_handler
+.type   pend_sv_handler,%function
+.thumb_func
+pend_sv_handler:
+    /**
+     * Disable interrupts. No need to check if they were enabled because,
+     * well, we're an interrupt handler. Duh...
+     */
+    movs    r0,         #1
+    msr     PRIMASK,    r0
     
+    /**
+     * Clear PendSv pending bit. There seems to exist a hardware race condition
+     * in the NVIC that can prevent automatic clearing of the PENDSVSET. See
+     * http://embeddedgurus.com/state-space/2011/09/whats-the-state-of-your-cortex/
+     */
+     ldr    r0,         = SCB_ICSR
+     ldr    r1,         = PENDSVCLR
+     str    r1,         [r0, #0]
+
+    /**
+     * Check if running and next thread are really different.
+     * From here on we have
+     * r0 = &ctx_switch_info
+     * r1 = ctx_switch_info.running_tcb
+     * r2 = ctx_switch_info.next_tcb
+     *
+     * If r1 == r2 we can skip the context switch. This may theoretically
+     * happen if the running thread gets scheduled out and in again by
+     * multiple nested or tail-chained ISRs before the PendSv handler
+     * gets called.
+     */
+    ldr     r0,         = CTX_SW_NFO
+    ldr     r1,         [r0, #CTX_RUN_OFF]
+    ldr     r2,         [r0, #CTX_NEXT_OFF]
+    cmp     r1,         r2
+    beq     no_switch
+
+    /**
+     * Copy running thread's process stack pointer to r3 and use it to push
+     * the thread's register context on its stack
+     */
+    mrs     r3,         PSP
+
+#if defined(THUMB_2)
+    /**
+     * Save old thread's context on Cortex-M[34]
+     */
+
+#if defined(WITH_FPU)
+    /* Check if FPU was used by thread and store registers if necessary */
+    tst     lr,         FPU_USED
+    it      eq
+    vstmdbeq  r3!,      {s16-s31}
+
+    /**
+     * TODO: Defer stacking FPU context by disabling FPU and using a
+     * fault handler to store the FPU registers if another thread
+     * tries using it
+     */
+#endif // WITH_FPU
+    
+    /* Push running thread's remaining registers on stack */
+    stmdb   r3!,        {r4-r11, lr}
+
+#else // !THUMB2
+
+    /**
+     * Save old thread's register context on Cortex-M0.
+     * Push running thread's remaining registers on stack.
+     * Thumb-1 can use stm only on low registers, so we
+     * have to do this in two steps.
+     */
+
+    /* Reserve space for r8-r11 + exc_return before storing r4-r7 */
+    subs    r3,         r3,     #36
+    stmia   r3!,        {r4-r7}
+
+    /**
+     * Move r8-r11 to low registers and use store multiple with automatic
+     * post-increment to push them on the stack
+     */
+    mov     r4,         r8
+    mov     r5,         r9
+    mov     r6,         r10
+    mov     r7,         r11
+    stmia   r3!,        {r4-r7}
+
+    /**
+     * Move lr (contains the exc_return code) to low registers and store it
+     * on the stack.
+     */
+    mov     r4,         lr
+    str     r4,         [r3, #0]
+
+    /* Re-adjust r3 to point at top of stack */
+    subs    r3,         r3, #32
+#endif // !THUMB_2
+    /**
+     * Address of running TCB still in r1. Store thread's current stack top
+     * into its sp_save_ptr, which is the struct's first element.
+     */
+    str     r3,         [r1, #0]
+    
+    /**
+     * ctx_switch_info.next_tcb is going to become ctx_switch_info.running_tcb,
+     * so we update the pointer.
+     */
+    str     r2,         [r0, #CTX_RUN_OFF]
+    
+#if defined(__NEWLIB__)
+    /**
+     * Store the thread's reentry context address in _impure_ptr. This
+     * will have been stored in ctx_switch_info.reent.
+     */ 
+    ldr     r4,         [r0, #CTX_REENT_OFF]
+    ldr     r3,         = _impure_ptr
+    str     r4,         [r3, #0]
+#endif
+
+    /**
+     * Fetch next thread's stack pointer from its TCB's sp_save_ptr and restore
+     * the thread's register context.
+     */
+    ldr     r3,         [r2, #0]
+
+#if defined(THUMB_2)
+
+    /* Cortex-M[34], restore thread's task stack frame */
+    ldmia   r3!,        {r4-r11, lr}
+
+#if defined(WITH_FPU)
+    /**
+     * Check if FPU was used by new thread and restore registers if necessary.
+     */
+    tst     lr,         FPU_USED
+    it      eq
+    vldmiaeq  r3!,      {s16-s31}
+
+    /**
+     * TODO: only restore FPU registers if FPU was used by another thread
+     * between this thread being scheduled out and now.
+     */
+#endif // WITH_FPU
+#else // !THUMB_2
+
+    /**
+     * Thread restore for Cortex-M0
+     * Restore thread's task stack frame. Because thumb 1 only supports
+     * load multiple on low register, we have to do it in two steps and
+     * adjust the stack pointer manually.
+     */
+
+    /* Restore high registers */
+    adds    r3,         r3, #16
+    ldmia   r3!,        {r4-r7}
+    mov     r8,         r4
+    mov     r9,         r5
+    mov     r10,        r6
+    mov     r11,        r7
+
+    /* Restore lr */
+    ldr     r4,         [r3, #0]
+    mov     lr,         r4
+    subs    r3,         r3, #32
+
+    /**
+     * Restore r4-r7 and adjust r3 to point at the top of the exception
+     * stack frame.
+     */
+    ldmia   r3!,        {r4-r7}
+    adds    r3,         r3, #20
+#endif // !THUMB_2
+
+    /* Set process stack pointer to new thread's stack*/
+    msr     PSP,        r3
+
+no_switch:
+    /* Re-enable interrupts */
+    movs    r0,         #0
+    msr     PRIMASK,    r0
+    
+    /* Return to new thread */
+    bx      lr
+    nop
+.size   pend_sv_handler, . - pend_sv_handler
+.endfunc
+
+
+//来自rtt的pendsv中断处理函数
+/* r0 --> switch from thread stack
+ * r1 --> switch to thread stack
+ * psr, pc, lr, r12, r3, r2, r1, r0 are pushed into [from] stack
+ */
+.global PendSV_Handler
+.type PendSV_Handler, %function
+PendSV_Handler:
+    /* disable interrupt to protect context switch */
+    MRS r2, PRIMASK
+    CPSID   I
+
+    /* get rt_thread_switch_interrupt_flag */
+    LDR r0, =rt_thread_switch_interrupt_flag
+    LDR r1, [r0]
+    CBZ r1, pendsv_exit         /* pendsv already handled */
+
+    /* clear rt_thread_switch_interrupt_flag to 0 */
+    MOV r1, #0x00
+    STR r1, [r0]
+
+    LDR r0, =rt_interrupt_from_thread
+    LDR r1, [r0]
+    CBZ r1, switch_to_thread    /* skip register save at the first time */
+
+    MRS r1, psp                 /* get from thread stack pointer */
+    
+#if defined (__VFP_FP__) && !defined(__SOFTFP__)
+    TST     lr, #0x10           /* if(!EXC_RETURN[4]) */
+    VSTMDBEQ r1!, {d8 - d15}    /* push FPU register s16~s31 */
+#endif
+    
+    STMFD   r1!, {r4 - r11}     /* push r4 - r11 register */
+
+#if defined (__VFP_FP__) && !defined(__SOFTFP__)
+    MOV     r4, #0x00           /* flag = 0 */
+
+    TST     lr, #0x10           /* if(!EXC_RETURN[4]) */
+    MOVEQ   r4, #0x01           /* flag = 1 */
+
+    STMFD   r1!, {r4}           /* push flag */
+#endif
+
+    LDR r0, [r0]
+    STR r1, [r0]                /* update from thread stack pointer */
+
+switch_to_thread:
+    LDR r1, =rt_interrupt_to_thread
+    LDR r1, [r1]
+    LDR r1, [r1]                /* load thread stack pointer */
+
+#if defined (__VFP_FP__) && !defined(__SOFTFP__)
+    LDMFD   r1!, {r3}           /* pop flag */
+#endif
+
+    LDMFD   r1!, {r4 - r11}     /* pop r4 - r11 register */
+
+#if defined (__VFP_FP__) && !defined(__SOFTFP__)
+    CMP     r3,  #0             /* if(flag_r3 != 0) */
+    VLDMIANE  r1!, {d8 - d15}   /* pop FPU register s16~s31 */
+#endif
+
+    MSR psp, r1                 /* update stack pointer */
+
+#if defined (__VFP_FP__) && !defined(__SOFTFP__)
+    ORR     lr, lr, #0x10       /* lr |=  (1 << 4), clean FPCA. */
+    CMP     r3,  #0             /* if(flag_r3 != 0) */
+    BICNE   lr, lr, #0x10       /* lr &= ~(1 << 4), set FPCA. */
+#endif
+
+pendsv_exit:
+    /* restore interrupt */
+    MSR PRIMASK, r2
+
+    ORR lr, lr, #0x04
+    BX  lr

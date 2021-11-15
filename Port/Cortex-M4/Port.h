@@ -15,8 +15,8 @@
  */
 #ifndef __ROV_PORT_H
 #define __ROV_PORT_H
-#include <Setup.h>
-#include <Defines.h>
+#include "Defines.h"
+#include "Setup.h"
 
 #ifdef __cplusplus
 extern  "C" {
@@ -31,14 +31,13 @@ extern  "C" {
 #define USE_FPU   0
 #endif
 
-#define NVIC_INT_CTRL       (0xE000ED04)      // 中断控制及状态寄存器
-#define NVIC_PENDSVSET      (0x10000000)      // 触发软件中断的值
-#define NVIC_SYSPRI2        (0xE000ED22)      // 系统优先级寄存器
-#define NVIC_PENDSV_PRI     (0x000000FF)      // 配置优先级
-
-#define VECTACTIVE_MASK     (0xFFUL)          // ICSR寄存器VECTACTIVE位掩码
-
-    /* ARM异常号 */
+    /* 系统控制寄存器 */
+#define NVIC_INT_CTRL       (*((volatile uint32_t *)0xE000ED04))        // 中断控制及状态寄存器
+#define NVIC_PENDSVSET      (*((volatile uint32_t *)0x10000000))        // 触发软件中断的值
+#define NVIC_SYSPRI2        (*((volatile uint32_t *)0xE000ED22))        // 系统优先级寄存器
+#define NVIC_PENDSV_PRI     (*((volatile uint32_t *)0x000000FF))        // 配置优先级
+#define VECTACTIVE_MASK     (0xFFul)                                    // ICSR寄存器VECTACTIVE位掩码
+/* ARM异常号 */
 #define  OS_CPU_ARM_EXCEPT_RESET                                                                    0x00u
 #define  OS_CPU_ARM_EXCEPT_UNDEF_INSTR                                                              0x01u
 #define  OS_CPU_ARM_EXCEPT_SWI                                                                      0x02u
@@ -67,18 +66,23 @@ extern  "C" {
 #define  OS_CPU_ARM_EXCEPT_IRQ_HANDLER_ADDR             (OS_CPU_ARM_EXCEPT_IRQ            * 0x04u + 0x20u)
 #define  OS_CPU_ARM_EXCEPT_FIQ_HANDLER_ADDR             (OS_CPU_ARM_EXCEPT_FIQ            * 0x04u + 0x20u)
 /* CPU SCB寄存器地址 */
-#define SCB_MMAR        (*(volatile const unsigned *)0xE000ED34)        /* 内存管理错误地址寄存器 */
-#define SCB_CFSR_MFSR   (*(volatile const unsigned char*)0xE000ED28)    /* 内存管理错误状态寄存器 */
-#define SCB_BFAR        (*(volatile const unsigned *)0xE000ED38)        /* 总线错误地址寄存器 */
-#define SCB_CFSR_BFSR   (*(volatile const unsigned char*)0xE000ED29)    /* 总线错误状态寄存器 */
-#define SCB_AIRCR       (*(volatile unsigned long *)0xE000ED0C)         /* 复位控制寄存器 */
-#define SCB_RESET_VALUE 0x05FA0004                                      /* 复位值,将它写到SCB_AIRCR可以引起CPU软复位 */
-#define SCB_CFSR        (*(volatile const unsigned *)0xE000ED28)        /* 可配置错误状态寄存器 */
-#define SCB_HFSR        (*(volatile const unsigned *)0xE000ED2C)        /* HardFault状态寄存器 */
-#define SCB_CFSR_UFSR   (*(volatile const unsigned short*)0xE000ED2A)   /* 使用错误状态寄存器 */
+#define SCB_MMAR        (*(volatile const unsigned *)       0xE000ED34)     /* 内存管理错误地址寄存器 */
+#define SCB_CFSR_MFSR   (*(volatile const unsigned char*)   0xE000ED28)     /* 内存管理错误状态寄存器 */
+#define SCB_BFAR        (*(volatile const unsigned *)       0xE000ED38)     /* 总线错误地址寄存器 */
+#define SCB_CFSR_BFSR   (*(volatile const unsigned char*)   0xE000ED29)     /* 总线错误状态寄存器 */
+#define SCB_AIRCR       (*(volatile unsigned long *)        0xE000ED0C)     /* 复位控制寄存器 */
+#define SCB_RESET_VALUE                                     0x05FA0004      /* 复位值，将它写到SCB_AIRCR可以引起CPU软复位 */
+#define SCB_CFSR        (*(volatile const unsigned *)       0xE000ED28)     /* 可配置错误状态寄存器 */
+#define SCB_HFSR        (*(volatile const unsigned *)       0xE000ED2C)     /* HardFault状态寄存器 */
+#define SCB_CFSR_UFSR   (*(volatile const unsigned short*)  0xE000ED2A)     /* 使用错误状态寄存器 */
 
+/* 全局中断控制 */
+#define DISABLE_INTERRUPTS()                    rov_interrupt_disable()
+#define ENABLE_INTERRUPTS(basepri)              rov_interrupt_enable(basepri)
 
-//XXX：从rtt抄的移植结构，包括栈初始化、异常处理和cpu软件复位
+/* 断言 */
+// #define ROV_ASSERT(x)                           if((0) == (x)) {DISABLE_INTERRUPTS();while(1);};
+
     u32 rov_interrupt_from_thread;
     u32 rov_interrupt_to_thread;
     u32 rov_thread_switch_interrupt_flag;
@@ -87,19 +91,6 @@ extern  "C" {
 
     /* 异常栈（用于保存线程切换时的寄存器） */
     struct exception_stack_frame
-    {
-        u32 r0;
-        u32 r1;
-        u32 r2;
-        u32 r3;
-        u32 r12;
-        u32 lr;
-        u32 pc;
-        u32 psr;
-    } ROV_NO_OPTIMIZE;
-
-    /* FPU异常栈 */
-    struct fpu_exception_stack_frame
     {
         u32 r0;
         u32 r1;
@@ -148,25 +139,6 @@ extern  "C" {
         u32 r9;
         u32 r10;
         u32 r11;
-
-        struct exception_stack_frame exception_stack_frame;
-    } ROV_NO_OPTIMIZE;
-
-    /* FPU线程栈 */
-    struct fpu_thread_stack_frame
-    {
-        u32 flag;
-
-        /* r4 ~ r11 寄存器 */
-        u32 r4;
-        u32 r5;
-        u32 r6;
-        u32 r7;
-        u32 r8;
-        u32 r9;
-        u32 r10;
-        u32 r11;
-
 #if USING_FPU
         /* FPU寄存器 s16 ~ s31 */
         u32 s16;
@@ -186,16 +158,117 @@ extern  "C" {
         u32 s30;
         u32 s31;
 #endif
-
-        struct fpu_exception_stack_frame exception_stack_frame;
+        struct exception_stack_frame exception_stack_frame;
     } ROV_NO_OPTIMIZE;
 
     /* 异常信息 */
     struct exception_info
     {
         u32 exc_return;
-        struct task_stack_frame stack_frame;
+        struct thread_stack_frame stack_frame;
     } ROV_NO_OPTIMIZE;
+
+    /**
+     * @brief 初始化线程栈
+     * @param  thread_entry     线程入口函数
+     * @param  parameter        函数参数
+     * @param  stack_addr       栈地址
+     * @param  thread_exit      线程退出函数
+     * @return u8*
+     * @note 该函数用于构建线程上下文
+     */
+    u8* rov_thread_stack_init(void* thread_entry, void* parameter, u8* stack_addr, void* thread_exit)
+    {
+        struct thread_stack_frame* stack_frame; //栈结构指针
+        u8* stack_pointer; //栈指针
+
+        /* 创建栈结构并对齐 */
+        stack_pointer = stack_addr + sizeof(u32);
+        stack_pointer = (u8*)ROV_ALIGN_DOWN((u32)(stack_pointer), 8);
+        stack_pointer -= sizeof(struct thread_stack_frame);
+        stack_frame = (struct thread_stack_frame*)stack_pointer;
+
+        /* 初始化寄存器为默认值 */
+        for (unsigned long i = 0; i < sizeof(struct thread_stack_frame) / sizeof(u32); i++)
+        {
+            ((u32*)stack_frame)[i] = U32_MAX;
+        }
+
+        stack_frame->exception_stack_frame.r0 = (unsigned long)parameter;       /* r0保存函数参数 */
+        stack_frame->exception_stack_frame.r1 = 0;                              /* r1 */
+        stack_frame->exception_stack_frame.r2 = 0;                              /* r2 */
+        stack_frame->exception_stack_frame.r3 = 0;                              /* r3 */
+        stack_frame->exception_stack_frame.r12 = 0;                             /* r12 */
+        stack_frame->exception_stack_frame.lr = (unsigned long)thread_exit;     /* lr保存线程退出函数 */
+        stack_frame->exception_stack_frame.pc = (unsigned long)thread_entry;    /* pc保存线程入口函数地址 */
+        stack_frame->exception_stack_frame.psr = 0x01000000L;                   /* PSR */
+
+#if USING_FPU
+        stack_frame->flag = 0;
+#endif
+
+        /* 返回获得的栈地址 */
+        return stack_frame;
+    }
+
+    /**
+     * @brief 设置异常处理函数
+     * @param  exception_handle 异常处理函数指针
+     */
+    void rov_exception_install(u8(*exception_handle)(void* context))
+    {
+        rov_exception_hook = exception_handle;
+    }
+
+    //DONE:全局中断控制
+    /**
+     * @brief 关全局中断
+     * @return 当前中断状态
+     */
+    static ROV_ALWAYS_INLINE u32 rov_interrupt_disable(void)
+    {
+        /**
+         * 读取PRIMASK寄存器的值到r0
+         * 关闭全局中断
+         * 函数返回
+         */
+#ifdef __GNUC__
+        u32 now_level = 0;
+        __asm volatile
+        ("MRS %0, PRIMASK\n""CPSID I\n" : "=r" (now_level) :: "memory");
+        return now_level;
+#endif
+#ifdef __CC_ARM
+        __asm
+        {
+            MRS     r0, PRIMASK
+            CPSID   I
+        }
+#endif
+        /* 此时r0中存储了PRIMASK的值 */
+    }
+
+    /**
+     * @brief 开全局中断
+     * @param  basepri          要恢复的中断状态
+     */
+    static ROV_ALWAYS_INLINE void rov_interrupt_enable(u32 basepri)
+    {
+        /**
+         * 将basepri的值写入PRIMASK寄存器
+         * 函数返回
+         */
+#ifdef __GNUC__
+        __asm volatile
+        ("MSR   PRIMASK, %0" :: "r" (basepri) : "memory");
+#endif
+#ifdef __CC_ARM
+        __asm
+        {
+            msr PRIMASK, basepri
+        }
+#endif
+    }
 
     /**
      * @brief 进入死循环
@@ -221,320 +294,9 @@ extern  "C" {
 
 
 
-
-    u8* rov_thread_stack_init(void* task_entry, void* parameter, u8* stack_addr, void* texit)
-    {
-        struct task_stack_frame* stack_frame;
-        u8* stack;
-
-        stack = stack_addr + sizeof(u32);
-        stack = (u8*)ROV_ALIGN_DOWN((u32)stack, 8);
-        stack -= sizeof(struct task_stack_frame);
-
-        stack_frame = (struct task_stack_frame*)stack;
-
-        /* init all register */
-        for (unsigned long i = 0; i < sizeof(struct task_stack_frame) / sizeof(u32); i++)
-        {
-            ((u32*)stack_frame)[i] = 0xdeadbeef;
-        }
-
-        stack_frame->exception_stack_frame.r0 = (unsigned long)parameter; /* r0 : argument */
-        stack_frame->exception_stack_frame.r1 = 0;                        /* r1 */
-        stack_frame->exception_stack_frame.r2 = 0;                        /* r2 */
-        stack_frame->exception_stack_frame.r3 = 0;                        /* r3 */
-        stack_frame->exception_stack_frame.r12 = 0;                        /* r12 */
-        stack_frame->exception_stack_frame.lr = (unsigned long)texit;     /* lr */
-        stack_frame->exception_stack_frame.pc = (unsigned long)tentry;    /* entry point, pc */
-        stack_frame->exception_stack_frame.psr = 0x01000000L;              /* PSR */
-
-#if USING_FPU
-        stack_frame->flag = 0;
-#endif /* USE_FPU */
-
-        /* return task's current stack address */
-        return stack;
-    }
-
-    void rov_exception_install(u8(*exception_handle)(void* context))
-    {
-        rov_exception_hook = exception_handle;
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    /* 全局中断控制 */
-    //TODO:这里预计使用内嵌汇编而不是独立的.S文件s
-#define DISABLE_INTERRUPTS() rov_interrupt_disable() //DEBUG:在.S中有定义
-#define ENABLE_INTERRUPTS() rov_interrupt_enable() //DEBUG:在.S中有定义
-    static ROV_ALWAYS_INLINE void rov_interrupt_disable(void)
-    {
-        __asm
-        {
-            /* freertos思路：把BASEPRI提高到最大系统调用优先级来防止中断发生 */
-            MRS basepri, ulNewBASEPRI
-            DSB
-            ISB
-            /* rtt思路：把r0设置为最高优先级 */
-            MRS     r0, PRIMASK
-            CPSID   I
-            BX      LR
-        }
-    }
-
-    static ROV_ALWAYS_INLINE void rov_interrupt_enable(u32 basepri)
-    {
-        __asm
-        {
-            /* freertos思路：降低BASEPRI来使能其他中断 */
-            MSR basepri, ulBASEPRI
-            /* rtt思路：返回r0 */
-            MSR     PRIMASK, r0
-            BX      LR
-        }
-    }
-
-#define ENTER_CRITICAL() rov_enter_critical()
-#define EXIT_CRITICAL() rov_exit_critical()
-    static ROV_ALWAYS_INLINE void rov_enter_critical(void)
-    {
-        /* freertos思路：关闭中断，再设置嵌套中断层数 */
-        DISABLE_INTERRUPTS();
-        interrupt_nest++;
-        if (interrupt_nest == 1)
-        {
-            ROV_ASSERT((NVIC_INT_CTRL & VECTACTIVE_MASK) == 0);
-        }
-        /* rtt思路：返回r0 */
-        rov_BaseType level;
-        level = rov_interrupt_enable();
-        interrupt_nest++; //指示嵌套中断层数的全局变量
-        rov_interrupt_disable(level);
-    }
-
-    static ROV_ALWAYS_INLINE void rov_exit_critical(void)
-    {
-        /* freertos思路：降低BASEPRI来使能其他中断 */
-        ROV_ASSERT(interrupt_nest);
-        interrupt_nest--;
-        if (interrupt_nest == 0)
-        {
-            ENABLE_INTERRUPTS();
-        }
-        /* rtt思路：返回r0 */
-        rov_BaseType level;
-        level = rov_interrupt_disable();
-        interrupt_nest--; //指示嵌套中断层数的全局变量
-        rov_interrupt_enable(level);
-    }
-
-
-
-
-    /* PendSV中断服务函数 */
-    //TODO:这里预计使用内嵌汇编而不是独立的.S文件
-    //XXX：freertos的PendSV中断服务函数
-
-    /*
-     * Exception handlers.
-     */
-    void xPortPendSVHandler(void);
-    __asm void xPortPendSVHandler(void)
-    {
-        extern uxCriticalNesting;
-        extern pxCurrentTCB;
-        extern vTaskSwitchContext;
-
-        /* *INDENT-OFF* */
-        PRESERVE8
-
-            mrs r0, psp
-            isb
-            /* Get the location of the current TCB. */
-            ldr r3, =pxCurrentTCB
-            ldr r2, [r3]
-
-            /* Is the task using the FPU context?  If so, push high vfp registers. */
-            tst r14, #0x10
-            it eq
-            vstmdbeq r0!, { s16 - s31 }
-
-            /* Save the core registers. */
-            stmdb r0!, { r4 - r11, r14 }
-
-            /* Save the new top of stack into the first member of the TCB. */
-            str r0, [r2]
-
-            stmdb sp!, { r0, r3 }
-            mov r0, # configMAX_SYSCALL_INTERRUPT_PRIORITY
-            msr basepri, r0
-            dsb
-            isb
-            bl vTaskSwitchContext
-            mov r0, # 0
-            msr basepri, r0
-            ldmia sp!, { r0, r3 }
-
-            /* The first item in pxCurrentTCB is the task top of stack. */
-            ldr r1, [r3]
-            ldr r0, [r1]
-
-            /* Pop the core registers. */
-            ldmia r0!, { r4 - r11, r14 }
-
-            /* Is the task using the FPU context?  If so, pop the high vfp registers
-             * too. */
-            tst r14, # 0x10
-            it eq
-            vldmiaeq r0!, { s16 - s31 }
-
-            msr psp, r0
-            isb
-#ifdef WORKAROUND_PMU_CM001 /* XMC4000 specific errata */
-#if WORKAROUND_PMU_CM001 == 1
-            push{ r14 }
-            pop{ pc }
-            nop
-#endif
-#endif
-
-            bx r14
-            /* *INDENT-ON* */
-    }
-
-    /* XXX:直接照抄RT-Thread的PendSV中断服务函数
-     * r0 --> switch from thread stack
-     * r1 --> switch to thread stack
-     * psr, pc, lr, r12, r3, r2, r1, r0 are pushed into [from] stack
-     */
-    static ROV_INLINE void PendSV_Handler(void);
-    __asm static ROV_INLINE void PendSV_Handler(void)
-    {
-        /* 关中断保护线程切换 */
-        MRS r2, PRIMASK
-            CPSID   I
-
-            /* 获取rov_thread_switch_interrupt_flag标志位 */
-            LDR r0, =rov_thread_switch_interrupt_flag
-            LDR r1, [r0]
-            CBZ r1, pendsv_exit
-
-            /* 清除rov_thread_switch_interrupt_flag标志位 */
-            MOV r1, #0x00
-            STR r1, [r0]
-
-            LDR r0, =rov_interrupt_from_thread
-            LDR r1, [r0]
-            CBZ r1, switch_to_thread
-
-            MRS r1, psp
-
-#if defined (__VFP_FP__) && !defined(__SOFTFP__)
-            TST     lr, #0x10
-            VSTMDBEQ r1!, { d8 - d15 }
-#endif
-
-            STMFD   r1!, { r4 - r11 }
-
-#if defined (__VFP_FP__) && !defined(__SOFTFP__)
-            MOV     r4, #0x00
-
-            TST     lr, #0x10
-            MOVEQ   r4, #0x01
-
-            STMFD   r1!, { r4 }
-#endif
-
-            LDR r0, [r0]
-            STR r1, [r0]
-
-            switch_to_thread:
-        LDR r1, =rov_interrupt_to_thread
-            LDR r1, [r1]
-            LDR r1, [r1]
-
-#if defined (__VFP_FP__) && !defined(__SOFTFP__)
-            LDMFD   r1!, { r3 }
-#endif
-
-            LDMFD   r1!, { r4 - r11 }
-
-#if defined (__VFP_FP__) && !defined(__SOFTFP__)
-            CMP     r3, #0
-            VLDMIANE  r1!, { d8 - d15 }
-#endif
-
-            MSR psp, r1
-
-#if defined (__VFP_FP__) && !defined(__SOFTFP__)
-            ORR     lr, lr, #0x10
-            CMP     r3, #0
-            BICNE   lr, lr, #0x10
-#endif
-
-        pendsv_exit:
-        MSR PRIMASK, r2
-            ORR lr, lr, #0x04
-            BX  lr
-
-    }
-
-
-
-
-
-
-
-
-
-
-
+    //TODO:systick函数编写
     //XXX:从FreeRTOS照抄的systick函数
-    void vPortSetupTimerInterrupt(void);
-    __weak void vPortSetupTimerInterrupt(void)
+    ROV_WEAK void SysTickInterrupt_Initer(void)
     {
         /* Calculate the constants required to configure the tick interrupt. */
 #if ( configUSE_TICKLESS_IDLE == 1 )
@@ -554,11 +316,7 @@ extern  "C" {
         portNVIC_SYSTICK_CTRL_REG = (portNVIC_SYSTICK_CLK_BIT | portNVIC_SYSTICK_INT_BIT | portNVIC_SYSTICK_ENABLE_BIT);
     }
 
-
-
-
-    void xPortSysTickHandler(void);
-    void xPortSysTickHandler(void)
+    ROV_WEAK void SysTickInterrupt_Handler(void)
     {
         vPortRaiseBASEPRI();
         {
@@ -574,34 +332,38 @@ extern  "C" {
         vPortClearBASEPRIFromISR();
     }
 
+    //XXX:从rtt抄的systick函数
+    void SysTickInterrupt_Handler(void)
+    {
+        struct rt_thread* thread;
+        rt_base_t level;
 
+        level = rt_hw_interrupt_disable();
 
+        /* increase the global tick */
+        ++rt_tick;
 
+        /* check time slice */
+        thread = rt_thread_self();
 
+        --thread->remaining_tick;
+        if (thread->remaining_tick == 0)
+        {
+            /* change to initialized tick */
+            thread->remaining_tick = thread->init_tick;
+            thread->stat |= RT_THREAD_STAT_YIELD;
 
+            rt_hw_interrupt_enable(level);
+            rt_schedule();
+        }
+        else
+        {
+            rt_hw_interrupt_enable(level);
+        }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        /* check timer */
+        rt_timer_check();
+    }
 
 
 

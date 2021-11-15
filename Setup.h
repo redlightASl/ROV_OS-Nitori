@@ -47,18 +47,19 @@
 
 /* 内核名称最大长度 */
 #define NITORI_CORE_NAME_MAX_LENGTH         8
-/* 最大线程优先级 */
-#define	NITORI_MAX_PRIORITY			    	8
-/* 默认线程堆栈大小 */
+/* 默认线程栈大小 */
 #define NITORI_STACK_SIZE_DEFAULT	    	512
 /* 默认线程优先级 */
-#define NITORI_STACK_PRIORITY_DEFAULT       3
-/* 时钟节拍的周期，以ms为单位 */
-#define NITORI_SYSTICK_MS                   10 
+#define NITORI_THREAD_PRIORITY_DEFAULT       3
+/* 最大线程优先级 */
+#define	NITORI_MAX_THREAD_PRIORITY          8
+/* 时钟节拍的周期，以ms为单位，一般为10ms */
+#define NITORI_SYSTICK_MS                   10
 /* 每个线程最大运行的时间片计数 */
 #define NITORI_MAX_RUNTIME_SLICE            10
-/* 空闲线程堆栈大小 */
+/* 空闲线程栈大小 */
 #define NITORI_IDLETASK_STACK_SIZE	    	512
+
 
 /* 使用线程调度器 */
 #define NITORI_THREAD
@@ -84,7 +85,7 @@
 #define ROV_COMMAND_DATA_CHECK //下传指令校验
 
 /* 传感器数据最大长度 */
-#define MAX_LENGTH_OF_SENSOR_DATA 8
+#define MAX_LENGTH_OF_SENSOR_DATA 16
 
 
 

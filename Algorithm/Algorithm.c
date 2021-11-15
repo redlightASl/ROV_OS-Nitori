@@ -170,8 +170,8 @@ ROV_ALWAYS_INLINE u8 XorCheck(u8* CacString, u8 CalLength, u8 CacBit)
 
 
 
-//TODO：用于定深的卡尔曼滤波
-//NOTE：定深算法
+//TODO:用于定深的卡尔曼滤波
+//NOTE:定深算法
 //使用PID，根据设定深度输出一个推进器控制值
 //
 // u16 KalmanFilter(u16 original_value, u16 measure_value)
@@ -253,7 +253,7 @@ u16 PositionalPID(u16 target_value, u16 actual_value)
 #endif
 }
 
-//TODO：专用于的PID算法
+//TODO:专用于的PID算法
 u16 IncrementalPID(u16 target_value, u16 actual_value)
 {
 #ifdef HARDWARE_ACCELERATE_PID
@@ -350,7 +350,7 @@ u32 PIDCal(Algorithm_PID_t Pid, f32 feedback)
 
     switch (Pid->mode)
     {
-        //TODO:整型PID
+        //TODO:整型PID，PID计算Debug
     case PID_IF: //增量浮点型
         Pid->FeedBack = feedback;
         //pid->Error = pid->Ref - pid->FeedBack;
@@ -392,7 +392,6 @@ u32 PIDCal(Algorithm_PID_t Pid, f32 feedback)
             Pid->Output = Pid->MinOutput;
         }
         break;
-        //TODO：PID计算Debug
     case PID_PF: //位置浮点型
         Pid->FeedBack = feedback;
         //pid->Error = pid->Ref - pid->FeedBack;
@@ -504,7 +503,7 @@ AttitudeControl_t CommonThrusterControl(u16 straight_num, u16 rotate_num, u16 ve
         ThrusterTemp.HorizontalThruster_LeftFront = (vu32)(rotate_num);
         ThrusterTemp.HorizontalThruster_LeftRear = (vu32)(3000 - rotate_num);
         break;
-    case MIX_MODE:
+    case HORIZENTAL_MIX_MODE:
         //水平推进器保持不动
         break;
     default:
@@ -538,7 +537,7 @@ AttitudeControl_t CommonThrusterControl(u16 straight_num, u16 rotate_num, u16 ve
         ThrusterTemp.VerticalThruster_LeftFront = (vu32)(3000 - vertical_num);
         ThrusterTemp.VerticalThruster_LeftRear = (vu32)(3000 - vertical_num);
         break;
-    case MIX_MODE: //TODO:自由翻滚模式测试
+    case VERTICAL_MIX_MODE: //TODO:自由翻滚模式测试
         u8 AFlag = (rotate_num > straight_num);
         u8 BFlag = ((rotate_num + straight_num) > 3000);
         u8 CFlag = (rotate_num > 1500);

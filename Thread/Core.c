@@ -6,7 +6,7 @@
  */
 static ROV_INLINE void rov_List_init(rov_DoubleList_t* list)
 {
-    list->next = list->prev = list;
+    list->__next__ = list->__prev__ = list;
 }
 
 /**
@@ -16,10 +16,10 @@ static ROV_INLINE void rov_List_init(rov_DoubleList_t* list)
  */
 static ROV_INLINE void rov_List_insert_after(rov_DoubleList_t* list, rov_DoubleList_t* node)
 {
-    list->next->prev = node;
-    node->next = list->next;
-    list->next = node;
-    node->prev = list;
+    list->__next__->__prev__ = node;
+    node->__next__ = list->__next__;
+    list->__next__ = node;
+    node->__prev__ = list;
 }
 
 /**
@@ -29,10 +29,10 @@ static ROV_INLINE void rov_List_insert_after(rov_DoubleList_t* list, rov_DoubleL
  */
 static ROV_INLINE void rov_List_insert_before(rov_DoubleList_t* list, rov_DoubleList_t* node)
 {
-    list->prev->next = node;
-    node->prev = list->prev;
-    list->prev = node;
-    node->next = list;
+    list->__prev__->__next__ = node;
+    node->__prev__ = list->__prev__;
+    list->__prev__ = node;
+    node->__next__ = list;
 }
 
 /**
@@ -41,10 +41,10 @@ static ROV_INLINE void rov_List_insert_before(rov_DoubleList_t* list, rov_Double
  */
 static ROV_INLINE void rov_List_remove(rov_DoubleList_t* node)
 {
-    node->next->prev = node->prev;
-    node->prev->next = node->next;
+    node->__next__->__prev__ = node->__prev__;
+    node->__prev__->__next__ = node->__next__;
 
-    node->next = node->prev = node;
+    node->__next__ = node->__prev__ = node;
 }
 
 /**
@@ -54,7 +54,7 @@ static ROV_INLINE void rov_List_remove(rov_DoubleList_t* node)
  */
 static ROV_INLINE u8 rov_List_isempty(const rov_DoubleList_t* list)
 {
-    return list->next == list;
+    return list->__next__ == list;
 }
 
 /**
@@ -65,9 +65,9 @@ static ROV_INLINE u8 rov_List_len(const rov_DoubleList_t* list)
 {
     u8 len = 0;
     const rov_DoubleList_t* p = list;
-    while (p->next != list)
+    while (p->__next__ != list)
     {
-        p = p->next;
+        p = p->__next__;
         len++;
     }
     return len;
@@ -87,9 +87,9 @@ static ROV_INLINE u8 rov_List_len(const rov_DoubleList_t* list)
  * @brief systick中断处理函数
  * @return WEAK void 无返回值
  */
-WEAK void SysTick_Handler(void)
-{
-    rov_interrupt_enter();
-    Systick_increase();
-    rov_interrupt_leave();
-}
+// WEAK void SysTick_Handler(void)
+// {
+//     rov_interrupt_enter();
+//     Systick_increase();
+//     rov_interrupt_leave();
+// }

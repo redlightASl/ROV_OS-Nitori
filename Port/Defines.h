@@ -16,11 +16,11 @@
 #ifndef __ROV_DEFINES_H
 #define __ROV_DEFINES_H
 
- /* 操作系统版本 */
-#define NITORI_VERSION 0L
+/* 操作系统版本 */
+#define NITORI_MAINVERSION 0L
 #define NITORI_SUBVERSION 1L
 #define NITORI_REVISION 1L
-#define NITORI_VERSION ((NITORI_VERSION * 10000) + (NITORI_SUBVERSION * 100) + (NITORI_REVISION))
+#define NITORI_VERSION ((NITORI_MAINVERSION * 10000) + (NITORI_SUBVERSION * 100) + (NITORI_REVISION))
 
 /* 编程数据类型 */
 typedef unsigned            char        u8;                     /**<  8bit integer type */
@@ -38,11 +38,11 @@ typedef                     double      f64;                    /**< 64bit doubl
 /* 系统数据类型 */
 typedef                     long        rov_BaseType;           /**< 64bit basic type for Nitori Core */
 typedef unsigned            long        rov_uBaseType;          /**< 64bit basic type for Nitori Core */
-typedef u32                             rov_TaskStackType;      /**< 64bit basic type for Nitori Core */
+typedef unsigned            int         rov_TaskStackType;      /**< 64bit basic type for Nitori Core */
 
-#define U8_MAX                          0xff                    /**< Maxium number of u8 */
-#define U16_MAX                         0xffff                  /**< Maxium number of u16 */
-#define U32_MAX                         0xffffffff              /**< Maxium number of u32 */
+#define U8_MAX                          0xFF                    /**< Maxium number of u8 */
+#define U16_MAX                         0xFFFF                  /**< Maxium number of u16 */
+#define U32_MAX                         0xFFFFFFFF              /**< Maxium number of u32 */
 
 #define TICK_MAX                        U32_MAX                 /**< Maxium number of sys-tick */
 
@@ -78,29 +78,27 @@ typedef u32                             rov_TaskStackType;      /**< 64bit basic
 #define ROV_WEAK                        __attribute__((weak))
 #define ROV_INLINE                      __inline
 #define ROV_ALWAYS_INLINE               __attribute__((always_inline))
+#define ROV_FORCE_INLINE                __forceinline
 #define ROV_NO_OPTIMIZE                 __attribute__((packed))
 #endif
 
-/* 断言 */
-#define ROV_ASSERT(x)                   if((0) == (x)) {DISABLE_INTERRUPTS();while(1);}
-
 /* 硬件设备数据类型 */
 #ifdef NITORI_ON_STM32_HAL
-#define UART_Device UART_HandleTypeDef
-#define TIMER_Device TIM_HandleTypeDef
-#define SPI_Device SPI_HandleTypeDef
-#define IIC_Device IIC_HandleTypeDef
+#define UART_Device                     UART_HandleTypeDef
+#define TIMER_Device                    TIM_HandleTypeDef
+#define SPI_Device                      SPI_HandleTypeDef
+#define IIC_Device                      IIC_HandleTypeDef
 #else
 //串口设备
-#define UART_Device vu32*
+#define UART_Device                     vu32*
 //定时器设备
-#define TIMER_Device vu32*
+#define TIMER_Device                    vu32*
 //SPI设备
-#define SPI_Device vu32*
+#define SPI_Device                      vu32*
 //IIC设备
-#define IIC_Device vu32*
+#define IIC_Device                      vu32*
 //未知设备
-#define Unknown_Device vu32*
+#define Unknown_Device                  vu32*
 #endif
 
 typedef enum
@@ -114,7 +112,6 @@ typedef enum
     rov_Core_Type_Unknown = 0x0c,
     rov_Core_Type_Static = 0x80
 } rov_Core_Type; /* 内核对象类型 */
-
 
 typedef enum
 {
@@ -154,8 +151,7 @@ typedef enum
 {
     QUEUE_STATUS_INIT,
     QUEUE_STATUS_EMPTY,
-    QUEUE_STATUS_FULL,
-    QUEUE_STATUS_
+    QUEUE_STATUS_FULL
 } rov_Queue_Status; /* 队列状态 */
 
 typedef enum
@@ -166,21 +162,19 @@ typedef enum
     DEVICE_BUSY
 } rov_Devce_Status; /* 硬件设备状态 */
 
-
 typedef enum
 {
-    ROTATE_MODE,
-    SIDEPUSH_MODE,
-    MIX_MODE
+    ROTATE_MODE, //水平旋转模式
+    SIDEPUSH_MODE, //水平侧推模式
+    HORIZENTAL_MIX_MODE //水平融合模式
 } HorizentalMode; /* 水平推进器模式 */
 
-
 typedef enum
 {
-    UPDOWN_MODE,
-    ROLL_MODE,
-    PITCH_MODE,
-    MIX_MODE
+    UPDOWN_MODE, //垂直升降模式
+    ROLL_MODE, //垂直翻滚模式
+    PITCH_MODE, //垂直俯仰模式
+    VERTICAL_MIX_MODE //垂直融合模式
 } VerticalMode; /* 垂直推进器模式 */
 
 typedef enum
