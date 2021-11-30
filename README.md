@@ -72,3 +72,13 @@
 * FPGA自定义寄存器控制API
 * 对硬件运算和自主控制的API支持
 
+## V0.5 beta版本预计支持功能
+
+1. 可基于qemu环境或实际stm32f407部署
+2. 基于gcc、make、CMake、KernelConfig的工具链
+3. Port组件的cortex-m4移植（但不支持HardwareAccelerate）
+4. 基于stm32f407的内核TestBench和示例代码
+5. Thread组件中任务调度器基本功能（不支持内核对象类）
+6. Sys组件中信号量功能（不支持互斥量、消息队列、外设驱动模型）
+7. 不支持Sensor组件和BasicCtrl组件
+8. Algorithm组件中除硬件加速外所有功能

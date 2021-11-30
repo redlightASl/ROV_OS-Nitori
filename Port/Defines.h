@@ -40,19 +40,19 @@ typedef                     long        rov_BaseType;           /**< 64bit basic
 typedef unsigned            long        rov_uBaseType;          /**< 64bit basic type for Nitori Core */
 typedef unsigned            int         rov_TaskStackType;      /**< 64bit basic type for Nitori Core */
 
-#define U8_MAX                          0xFF                    /**< Maxium number of u8 */
-#define U16_MAX                         0xFFFF                  /**< Maxium number of u16 */
-#define U32_MAX                         0xFFFFFFFF              /**< Maxium number of u32 */
+#define U8_MAX                          0xFF                    /**< u8最大值 */
+#define U16_MAX                         0xFFFF                  /**< u16最大值 */
+#define U32_MAX                         0xFFFFFFFF              /**< u32最大值 */
 
-#define TICK_MAX                        U32_MAX                 /**< Maxium number of sys-tick */
+#define TICK_MAX                        U32_MAX                 /**< systick最大值 */
 
-#define ROV_TRUE                        1U                      /**< True Value */
-#define ROV_FALSE                       0U                      /**< False Value */
-#define ROV_NULL                        (0)                     /**< Null Value */
+#define ROV_TRUE                        1U                      /**< 真 */
+#define ROV_FALSE                       0U                      /**< 假 */
+#define ROV_NULL                        (0)                     /**< 空 */
 
 /* 寄存器数据类型 */
-#define MEM32(addr)                     *(volatile unsigned long *)(addr)  /**< 32bit register */
-#define MEM8(addr)                      *(volatile unsigned char *)(addr)  /**< 8bit register */
+#define MEM32(addr)                     *(volatile unsigned long *)(addr)  /**< 32位寄存器 */
+#define MEM8(addr)                      *(volatile unsigned char *)(addr)  /**< 8位寄存器 */
 
 /* 系统控制类型 */
 #define ROV_STACK_ALIGN_SIZE            sizeof(u32)
@@ -60,6 +60,8 @@ typedef unsigned            int         rov_TaskStackType;      /**< 64bit basic
 #define ROV_ALIGN_DOWN(size, align)     ((size)                 & ~((align) - 1))
 
 #if defined (__GNUC__) /* gcc */
+#define ROV_OPTIMIZED_MEMORY            __attribute__((section(".TCM")))
+#define ROV_ETERNAL_SPACE               __attribute__((section(".ROM_D1")))
 #define ROV_STABLE_MEMORY_SPACE         __attribute__((section(".RAM_D1")))
 #define SECTION(x)                      __attribute__((section(x)))
 #define ROV_UNUSED                      __attribute__((unused))
@@ -89,16 +91,11 @@ typedef unsigned            int         rov_TaskStackType;      /**< 64bit basic
 #define SPI_Device                      SPI_HandleTypeDef
 #define IIC_Device                      IIC_HandleTypeDef
 #else
-//串口设备
-#define UART_Device                     vu32*
-//定时器设备
-#define TIMER_Device                    vu32*
-//SPI设备
-#define SPI_Device                      vu32*
-//IIC设备
-#define IIC_Device                      vu32*
-//未知设备
-#define Unknown_Device                  vu32*
+#define UART_Device                     vu32* //串口设备
+#define TIMER_Device                    vu32* //定时器设备
+#define SPI_Device                      vu32* //SPI设备
+#define IIC_Device                      vu32* //IIC设备
+#define Unknown_Device                  vu32* //未知设备
 #endif
 
 typedef enum
@@ -112,6 +109,16 @@ typedef enum
     rov_Core_Type_Unknown = 0x0c,
     rov_Core_Type_Static = 0x80
 } rov_Core_Type; /* 内核对象类型 */
+
+typedef enum
+{
+    rov_Core_Status_INIT, //初始化
+    rov_Core_Status_HANG, //挂起
+    rov_Core_Status_SUSPEND, //被阻塞
+    rov_Core_Status_RECEIVED, //被接收
+    rov_Core_Status_EMPTY, //等待队列空
+    rov_Core_Status_FULL //等待队列满
+} rov_Core_Type; /* 内核对象状态 */
 
 typedef enum
 {
@@ -133,48 +140,25 @@ typedef enum
 
 typedef enum
 {
-    SEMAPHOR_STATUS_INIT,
-    SEMAPHOR_STATUS_HANG,
-    SEMAPHOR_STATUS_SUSPEND,
-    SEMAPHOR_STATUS_RECEIVED
-} rov_Semaphore_Status; /* 信号量状态 */
-
-typedef enum
-{
-    MUTEX_STATUS_INIT,
-    MUTEX_STATUS_HANG,
-    MUTEX_STATUS_SUSPEND,
-    MUTEX_STATUS_RECEIVED
-} rov_Mutex_Status; /* 互斥量状态 */
-
-typedef enum
-{
-    QUEUE_STATUS_INIT,
-    QUEUE_STATUS_EMPTY,
-    QUEUE_STATUS_FULL
-} rov_Queue_Status; /* 队列状态 */
-
-typedef enum
-{
-    DEVICE_CLOSE,
-    DEVICE_OPEN,
-    DEVICE_ERROR,
-    DEVICE_BUSY
+    DEVICE_CLOSE, //关闭
+    DEVICE_OPEN, //打开
+    DEVICE_ERROR, //故障
+    DEVICE_BUSY //忙碌
 } rov_Devce_Status; /* 硬件设备状态 */
 
 typedef enum
 {
-    ROTATE_MODE, //水平旋转模式
-    SIDEPUSH_MODE, //水平侧推模式
-    HORIZENTAL_MIX_MODE //水平融合模式
+    ROTATE_MODE, //水平旋转
+    SIDEPUSH_MODE, //水平侧推
+    HORIZENTAL_MIX_MODE //水平融合
 } HorizentalMode; /* 水平推进器模式 */
 
 typedef enum
 {
-    UPDOWN_MODE, //垂直升降模式
-    ROLL_MODE, //垂直翻滚模式
-    PITCH_MODE, //垂直俯仰模式
-    VERTICAL_MIX_MODE //垂直融合模式
+    UPDOWN_MODE, //垂直升降
+    ROLL_MODE, //垂直翻滚
+    PITCH_MODE, //垂直俯仰
+    VERTICAL_MIX_MODE //垂直融合
 } VerticalMode; /* 垂直推进器模式 */
 
 typedef enum
@@ -185,6 +169,11 @@ typedef enum
     PID_PF //位置浮点
 } rov_Algorithm_Pid; /* PID模式 */
 
+typedef enum
+{
+    KALMAN_P, //整型
+    KALMAN_F //浮点
+} rov_Algorithm_Kalman; /* 卡尔曼滤波模式 */
 
 
 #endif
