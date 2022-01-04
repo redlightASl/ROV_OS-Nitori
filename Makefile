@@ -1,0 +1,2 @@
+PROJECT_NAME := Nitori_RTOS
+

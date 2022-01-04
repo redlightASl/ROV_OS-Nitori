@@ -20,7 +20,7 @@
 ROV_ALWAYS_INLINE void rov_add_f32(f32* pSrcA, f32* pSrcB, f32* pDst, u32 blockSize);
 ROV_ALWAYS_INLINE void rov_sub_f32(f32* pSrcA,f32* pSrcB,f32* pDst,u32 blockSize);
 ROV_ALWAYS_INLINE void rov_mult_f32(f32* pSrcA,f32* pSrcB,f32* pDst,u32 blockSize);
-ROV_ALWAYS_INLINE void rov_add_f32(f32* pSrcA, f32* pSrcB, f32* pDst, u32 blockSize);
+// ROV_ALWAYS_INLINE void rov_add_f32(f32* pSrcA, f32* pSrcB, f32* pDst, u32 blockSize);
 
 
 #endif
