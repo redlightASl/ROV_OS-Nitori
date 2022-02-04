@@ -1,12 +1,4 @@
 menu "Nitori ROV-OS Kernel Configuration"
-# 将来可能会用的menuconfig系统
-
-config RT_VER_NUM
-    hex
-    default 0x40004
-    help
-        RT-Thread version number
-        
 menu "Core"
 config NITORI_CORE_NAME_MAX_LENGTH
     int "内核对象名称最大长度"
@@ -34,13 +26,9 @@ config NITORI_DEVICE
     bool "使用内核设备"
     default y
     select NITORI_DEVICE
-
-
 endmenu
 
 menu "Thread"
-
-
 config NITORI_STACK_SIZE_DEFAULT
     int "默认线程栈大小"
     range 256 1024
@@ -72,7 +60,6 @@ config NITORI_IDLETASK_STACK_SIZE
     int "空闲线程栈大小"
     range
     default
-        
 endmenu
 
 menu "Sys"
@@ -118,7 +105,5 @@ config ROV_COMMAND_DATA_CHECK
     bool "下传指令校验"
     default y
     select ROV_COMMAND_DATA_CHECK
-
 endmenu
-
 endmenu

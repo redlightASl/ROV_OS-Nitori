@@ -74,6 +74,8 @@
 
 /* 基于HAL库 */
 #define NITORI_ON_STM32_HAL
+/* 基于其他FPGA加速库 */
+// #define NITORI_ON_FPGA_THIRD_PARTY
 
 /* 软件设置 */
 /* PID模式 */

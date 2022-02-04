@@ -41,33 +41,54 @@ ROV_ALWAYS_INLINE void rov_mult_f32(f32* pSrcA, f32* pSrcB, f32* pDst, u32 block
  * @param  pSrc             源操作数
  * @param  pDst             源操作数的绝对值
  * @param  blockSize        块大小
- * @return ROV_ALWAYS_INLINE
  */
 ROV_ALWAYS_INLINE void rov_abs_f32(f32* pSrc, f32* pDst, u32 blockSize)
 {
     return (((*pSrc) > 0) ? (*pSrc) : (0 - (*pSrc)));
 }
 
-//CRC校验
-ROV_WEAK ROV_ALWAYS_INLINE u8 CrcCalculate(u8* CacString, u8 CacStringSize)
+/**
+ * @brief CRC校验运算
+ * @param  pData            待校验数据
+ * @param  pRes             校验结果
+ * @param  dataSize         待校验数据长度
+ */
+ROV_ALWAYS_INLINE void rov_crc_check(u8* pData, u32* pRes, u32 dataSize);
 {
-    return 0;
+    *pRes = 1;
 }
 
-//奇偶校验
-ROV_WEAK ROV_ALWAYS_INLINE u8 ParityCalculate(u8* CacString, u8 CacStringSize)
+/**
+ * @brief 奇偶校验运算
+ * @param  pData            待校验数据
+ * @param  pRes             校验结果
+ * @param  dataSize         待校验数据长度
+ */
+ROV_ALWAYS_INLINE void rov_parity_check(u8* pData, u32* pRes, u32 dataSize);
 {
-    return 0;
+    *pRes = 1;
 }
 
-//加和校验
-ROV_WEAK ROV_ALWAYS_INLINE u8 SumCalculate(u8* CacString, u8 CacStringSize)
+/**
+ * @brief 异或校验运算
+ * @param  pData            待校验数据
+ * @param  pRes             校验结果
+ * @param  dataSize         待校验数据长度
+ */
+ROV_ALWAYS_INLINE void rov_xor_check(u8* pData, u32* pRes, u32 dataSize);
 {
-    return 0;
+    *pRes = 1;
 }
 
-//异或校验
-ROV_WEAK ROV_ALWAYS_INLINE u8 XorCalculate(u8* CacString, u8 CacStringSize)
+/**
+ * @brief 加和校验运算
+ * @param  pData            待校验数据
+ * @param  pRes             校验结果
+ * @param  dataSize         待校验数据长度
+ */
+ROV_ALWAYS_INLINE void rov_sum_check(u8* pData, u32* pRes, u32 dataSize);
 {
-    return 0;
+    *pRes = 1;
 }
+
+

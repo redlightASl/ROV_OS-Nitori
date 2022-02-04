@@ -1,6 +1,10 @@
 # Nitori-ROV-OS
 
-一个专门为水下机器人（ROV、AUV）进行优化的实时操作系统，暂命名为 `Nitori`，中文名 `荷取`
+[![License: GPL-3.0](https://img.shields.io/badge/license-GPL--3.0-blue)](https://github.com/redlightASl/ROV_OS-Nitori/blob/master/LICENSE)
+
+[![v0.3](https://img.shields.io/badge/beta-v0.3-red)](https://github.com/redlightASl/ROV_OS-Nitori)
+
+一个专门为水下机器人（ROV/AUV）进行优化的实时操作系统，暂命名为 `Nitori`，中文名 `荷取`
 
 可以通过修改硬件兼容层（Port）进行移植
 
@@ -61,8 +65,8 @@
 * V1.0：最初版本，使用指针和库内部的全局变量实现。适合于快速移植，但代码较难看懂
 * V2.0：使用结构体封装和位运算实现。封装较完善，但效率相对较低，但较容易理解，此外该版本存在一些bug有待修复
 * V3.0：V2.0的衍生版本，修复了可能存在的控制指令下传不正确的bug，改正了大端存储数据和小端存储数据
-* V4.0：最新迭代。增强代码稳健性，加入声呐传感器驱动，优化代码结构，但是传感器读取与延迟部分还存在问题
-* V5.0：目前正在筹划的版本。使用c面向对象重写，可基于FreeRTOS/RT-Thread快速部署到任何主控的机器人上，支持统一的传感器数据传输接口和PWM驱动，允许最多三个从设备进行级联，支持驱动ASIC/FPGA。效率降低，但是由于机器人将要全部使用stm32h750甚至更高性能的内核，效率损失可以忽略
+* V4.0：最新迭代。增强代码鲁棒性，加入声呐传感器驱动，优化代码结构，但是传感器读取与延迟部分还存在问题
+* V5.0：目前正在筹划的版本。使用c面向对象重写，可基于FreeRTOS/RT-Thread快速部署到任何主控的机器人上，支持统一的传感器数据传输接口和PWM驱动，允许最多三个从设备进行级联，支持驱动ASIC/FPGA。效率降低
 * V6.0：画大饼版本。使用c面向对象重写，底层基于指针和寄存器，紧密耦合基于ROV优化的FPGA软核，自带任务调度器、互斥量、邮箱，通过硬件直接解析传感器数据、控制PWM，自带PID、卡尔曼滤波、奇偶校验算法，效率极高，一个经过特殊优化的RTOS
 
 其中V5.0、V6.0版本被直接分割为 `Nitori-OS`的V1.0版本进行开发
@@ -91,18 +95,18 @@
 ## V0.5 beta版本预计功能
 
 1. 可基于qemu环境或实际stm32f407部署
-2. 基于gcc、make、CMake、KernelConfig的工具链
-3. Port组件的cortex-m4移植（但不支持HardwareAccelerate）
-4. 基于stm32f407的内核TestBench和示例代码
-5. Thread组件中任务调度器基本功能（不支持内核对象类）
-6. Sys组件中信号量功能（不支持互斥量、消息队列、外设驱动模型）
-7. 不支持Sensor组件和BasicCtrl组件
+2. 自带一套基于[arm-none-eabi-gcc/riscv32-unknown-linux-gnu-gcc]-[make]-[CMake]-[KernelConfig]的工具链
+3. Port组件的Cortex-M4移植（暂不支持HardwareAccelerate）
+4. 基于Cortex-M4的内核TestBench与线程调度示例代码
+5. Thread组件中任务调度器基本功能（暂不支持内核对象类）
+6. Sys组件中信号量功能（暂不支持互斥量、消息队列、外设驱动模型）
+7. 暂不支持Sensor组件和BasicCtrl组件
 8. Algorithm组件中除硬件加速外所有功能
 
 ## Todo
 
-* 整理架构图、工具链与部署方案
-* 搭建两套测试环境
-* 移植到cortex-m4并运行thread组件
+* ~~整理架构图、工具链~~与部署方案
+* ~~搭建两套测试环境~~
+* 移植到Cortex-M4并运行Thread组件
 * 实现Sys组件中的信号量功能
 

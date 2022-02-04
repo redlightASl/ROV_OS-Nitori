@@ -1,4 +1,14 @@
+## vscode
 .vscode
+
+## testbench
+TestBench/
+
+## binary
 Debug/
 build/
-TestBench/
+
+## object files
+*.o
+*.ko
+*.obj

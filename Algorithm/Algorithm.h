@@ -21,7 +21,7 @@
 #include <math.h>
 
 #ifdef __cplusplus
-extern "C" {
+ // extern "C" {
 #endif
 
 #ifdef PID_FIXED /* 恒定PID参数 */
@@ -77,87 +77,84 @@ extern "C" {
 			((origin_top) - (origin_bottom))) + \
 			(tatget_bottom)
 
-	struct AttitudeControl
-	{
-		vu32 HorizontalThruster_RightFront; //右前方水平推进器
-		vu32 HorizontalThruster_RightRear; //右后方水平推进器
-		vu32 HorizontalThruster_LeftFront; //左前方水平推进器
-		vu32 HorizontalThruster_LeftRear; //左后方水平推进器
-		vu32 VerticalThruster_RightFront; //右前方垂直推进器
-		vu32 VerticalThruster_RightRear; //右后方垂直推进器
-		vu32 VerticalThruster_LeftFront; //左前方垂直推进器
-		vu32 VerticalThruster_LeftRear; //左后方垂直推进器
-	};
-	typedef struct AttitudeControl AttitudeControl_t; /* 姿态控制ADT */
+struct AttitudeControl
+{
+	vu32 HorizontalThruster_RightFront; //右前方水平推进器
+	vu32 HorizontalThruster_RightRear; //右后方水平推进器
+	vu32 HorizontalThruster_LeftFront; //左前方水平推进器
+	vu32 HorizontalThruster_LeftRear; //左后方水平推进器
+	vu32 VerticalThruster_RightFront; //右前方垂直推进器
+	vu32 VerticalThruster_RightRear; //右后方垂直推进器
+	vu32 VerticalThruster_LeftFront; //左前方垂直推进器
+	vu32 VerticalThruster_LeftRear; //左后方垂直推进器
+};
+typedef struct AttitudeControl AttitudeControl_t; /* 姿态控制ADT */
 
-	struct Algorithm_PID
-	{
-		u8 mode; //PID模式设置
+struct Algorithm_PID
+{
+	u8 mode; //PID模式设置
 
-		f32 Ref; //参考值
-		f32 FeedBack; //反馈
-		f32 Error; //误差
-		f32 DError; //误差与上次差
-		f32 DDError; //误差上次与上上次差
-		f32 PreError; //上次误差
-		f32 PreDError; //上次误差差
+	f32 Ref; //参考值
+	f32 FeedBack; //反馈
+	f32 Error; //误差
+	f32 DError; //误差与上次差
+	f32 DDError; //误差上次与上上次差
+	f32 PreError; //上次误差
+	f32 PreDError; //上次误差差
 
-		f32 DeltaIntegral; //误差的积分
+	f32 DeltaIntegral; //误差的积分
 
-		f32 KiDomain; //Ki作用域，设为0关闭此功能
-		f32 KdDomain; //Kd作用域，设为0关闭此功能
+	f32 KiDomain; //Ki作用域，设为0关闭此功能
+	f32 KdDomain; //Kd作用域，设为0关闭此功能
 
-		f32 Kp; //PID参数p
-		f32 Ki; //PID参数i
-		f32 Kd; //PID参数d
+	f32 Kp; //PID参数p
+	f32 Ki; //PID参数i
+	f32 Kd; //PID参数d
 
-		u32 MaxOutput; //输出限幅
-		u32 MinOutput;
+	u32 MaxOutput; //输出限幅
+	u32 MinOutput;
 
-		f32 MaxIntegral; //积分限幅
-		f32 MinIntegral;
+	f32 MaxIntegral; //积分限幅
+	f32 MinIntegral;
 
-		f32 Output; //输出值
-	};
-	typedef struct Algorithm_PID* Algorithm_PID_t; /* PID控制ADT */
+	f32 Output; //输出值
+};
+typedef struct Algorithm_PID* Algorithm_PID_t; /* PID控制ADT */
 
-	struct Algorithm_Kalman
-	{
-		f32 MeasureNoise_R; //测量噪声
-		f32 ProcessNoise_Q; //过程噪声
+struct KalmanMatrix
+{
+	f32 A;
+	f32 B;
+	f32 C;
+	f32 D;
+};
+typedef struct KalmanMatrix* KalmanMatrix_t; /* 卡尔曼矩阵ADT */
 
-		f32 X_Output;
-		f32 X_last; //上一轮结果
-		f32 X_mid; //本次结果
+struct Algorithm_Kalman
+{
+	f32 Measure; //输入测量值
+	f32 Measure_Pre; //预测值
+	f32 R; //测量误差
+	f32 Q; //预测误差
 
-		f32 Measure; //测量值
+	KalmanMatrix_t KalmanMatrix; //卡尔曼矩阵
+};
+typedef struct Algorithm_Kalman* Algorithm_Kalman_t; /* 一维卡尔曼滤波控制ADT */
 
-		f32 P_mid;
-		f32 P_now;
+ROV_ALWAYS_INLINE u8 SumCheck(u8* CacString, u8 CalLength, u8 CacBit);
+ROV_ALWAYS_INLINE u8 CrcCheck(u8* CacString, u8 CalLength, u8 CacBit);
+ROV_ALWAYS_INLINE u8 ParityCheck(u8* CacString, u8 CalLength, u8 CacBit);
+ROV_ALWAYS_INLINE u8 XorCheck(u8* CacString, u8 CalLength, u8 CacBit);
 
-		f32 sumerror_kalman;
-		f32 sumerror_measure;
-	};
-	typedef struct Algorithm_Kalman* Algorithm_Kalman_t; /* 一维卡尔曼滤波控制ADT */
+void InitKalman(Algorithm_Kalman_t Kalman, f32 Q, f32 R, KalmanMatrix_t P);
+f32 KalmanIterOnce(Algorithm_Kalman_t Kalman, f32 Measure);
+void InitPID(u8 mode, Algorithm_PID_t Pid);
+u32 PIDCal(Algorithm_PID_t Pid, f32 feedback);
 
-	u8 SumCheck(u8* CacString, u8 CalLength, u8 CacBit);
-	u8 CrcCheck(u8* CacString, u8 CalLength, u8 CacBit);
-	u8 ParityCheck(u8* CacString, u8 CalLength, u8 CacBit);
-	u8 XorCheck(u8* CacString, u8 CalLength, u8 CacBit);
-
-	u16 KalmanFilter(u16 original_value);
-	u16 PositionalPID(u16 target_value, u16 actual_value);
-	u16 IncrementalPID(u16 target_value, u16 actual_value);
-
-	AttitudeControl_t CommonThrusterControl(u16 straight_num, u16 rotate_num, u16 vertical_num, u8 horizental_mode_num, u8 vertical_mode_num);
-
-
-
-	void InitPID(u8 mode, Algorithm_PID_t Pid);
-	u32 PIDCal(Algorithm_PID_t Pid, f32 feedback);
+AttitudeControl_t CommonThrusterControl(u16 straight_num, u16 rotate_num, u16 vertical_num, u8 horizental_mode_num, u8 vertical_mode_num);
 
 #ifdef __cplusplus
-}
+// }
 #endif
 
 #endif

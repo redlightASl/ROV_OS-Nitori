@@ -7,32 +7,27 @@
  * @brief 逐位加和运算
  * @param  CacString        待校验数据
  * @param  CacStringSize    待校验数据长度
- * @return u8 加和运算结果，如果不开启数据校验则默认返回1
+ * @return u32 加和运算结果
  */
-static u8 SumCalculate(u8* CacString, u8 CacStringSize)
+static u32 SumCalculate(u8* CacString, u8 CacStringSize)
 {
-#ifdef DATA_CHECK
     u32 CacResult = CacString[0];
     for (u8 i = 0; i < CacStringSize; i++)
     {
         CacResult += CacString[i];
     }
     return CacResult;
-#else
-    return 1;
-#endif
 }
 
 /**
  * @brief CRC校验
  * @param  CacString        待校验数据
  * @param  CacStringSize    待校验数据长度
- * @return u8 CRC运算结果，如果不开启数据校验则默认返回1
+ * @return u32 CRC运算结果
  */
-static u8 CrcCalculate(u8* CacString, u8 CacStringSize)
+static u32 CrcCalculate(u8* CacString, u8 CacStringSize)
 {
-#ifdef DATA_CHECK
-    u8 CacResult;
+    u32 CacResult;
     for (int num = CacStringSize; num > 0; num--)
     {
         CacResult = CacResult ^ (*CacString++ << 8);
@@ -50,50 +45,45 @@ static u8 CrcCalculate(u8* CacString, u8 CacStringSize)
         CacResult &= 0xFFFF;
     }
     return CacResult;
-#else
-    return 1;
-#endif
 }
 
+/**
+ * @brief 逐位奇偶运算
+ * @param  CacString        待校验数据
+ * @param  CacStringSize    待校验数据长度
+ * @return u8 奇偶运算结果
+ */
 static u8 ParityCalculate(u8* CacString, u8 CacStringSize)
 {
-#ifdef DATA_CHECK
-    u8 CacResult = 0;
+    u32 CacResult = 0;
     for (u8 i = 0; i < CacStringSize; i++)
     {
         CacResult += CacResult + GET_BIT_N_VAL((CacString), i);
     }
     if (CacResult % 2 == 0)
     {
-        return 1;
+        return 1u;
     }
     else
     {
-        return 0;
+        return 0u;
     }
-#else
-    return 1;
-#endif
 }
 
 /**
  * @brief 逐位异或运算
  * @param  CacString        待校验数据
  * @param  CacStringSize    待校验数据长度
- * @return u8 异或运算结果，如果不开启数据校验则默认返回1
+ * @return u8 异或运算结果
  */
 static u8 XorCalculate(u8* CacString, u8 CacStringSize)
 {
-#ifdef DATA_CHECK
     u8 CacResult = CacString[0];
     for (u8 i = 0; i < CacStringSize; ++i)
     {
         CacResult ^= CacString[i];
     }
     return CacResult;
-#else
-    return 1;
-#endif
 }
 
 /**
@@ -106,9 +96,15 @@ static u8 XorCalculate(u8* CacString, u8 CacStringSize)
 ROV_ALWAYS_INLINE u8 SumCheck(u8* CacString, u8 CalLength, u8 CacBit)
 {
 #ifdef DATA_CHECK
-    return ((CacString[CacBit] == SumCalculate(CacString, CalLength)) ? 1 : 0);
+#ifdef HARDWARE_ACCELERATE_SUM
+    u8 Res = 0;
+    rov_sum_check(CacString, &Res, CalLength);
+    return ((CacString[CacBit] == Res) ? 1 : 0);
 #else
-    return 1; //不开启奇偶校验时默认成功
+    return ((CacString[CacBit] == SumCalculate(CacString, CalLength)) ? 1 : 0);
+#endif
+#else
+    return 1; //不开启校验时默认成功
 #endif
 }
 
@@ -122,9 +118,15 @@ ROV_ALWAYS_INLINE u8 SumCheck(u8* CacString, u8 CalLength, u8 CacBit)
 ROV_ALWAYS_INLINE u8 CrcCheck(u8* CacString, u8 CalLength, u8 CacBit)
 {
 #ifdef DATA_CHECK
-    return ((CacString[CacBit] == CrcCalculate(CacString, CalLength)) ? 1 : 0);
+#ifdef HARDWARE_ACCELERATE_CRC
+    u8 Res = 0;
+    rov_crc_check(CacString, &Res, CalLength);
+    return ((CacString[CacBit] == Res) ? 1 : 0);
 #else
-    return 1; //不开启奇偶校验时默认成功
+    return ((CacString[CacBit] == CrcCalculate(CacString, CalLength)) ? 1 : 0);
+#endif
+#else
+    return 1; //不开启校验时默认成功
 #endif
 }
 
@@ -138,9 +140,15 @@ ROV_ALWAYS_INLINE u8 CrcCheck(u8* CacString, u8 CalLength, u8 CacBit)
 ROV_ALWAYS_INLINE u8 ParityCheck(u8* CacString, u8 CalLength, u8 CacBit)
 {
 #ifdef DATA_CHECK
-    return ((CacString[CacBit] == ParityCalculate(CacString, CalLength)) ? 1 : 0);
+#ifdef HARDWARE_ACCELERATE_PARITY
+    u8 Res = 0;
+    rov_parity_check(CacString, &Res, CalLength);
+    return ((CacString[CacBit] == Res) ? 1 : 0);
 #else
-    return 1; //不开启奇偶校验时默认成功
+    return ((CacString[CacBit] == ParityCalculate(CacString, CalLength)) ? 1 : 0);
+#endif
+#else
+    return 1; //不开启校验时默认成功
 #endif
 }
 
@@ -154,156 +162,66 @@ ROV_ALWAYS_INLINE u8 ParityCheck(u8* CacString, u8 CalLength, u8 CacBit)
 ROV_ALWAYS_INLINE u8 XorCheck(u8* CacString, u8 CalLength, u8 CacBit)
 {
 #ifdef DATA_CHECK
+#ifdef HARDWARE_ACCELERATE_XOR
+    u8 Res = 0;
+    rov_xor_check(CacString, &Res, CalLength);
+    return ((CacString[CacBit] == Res) ? 1 : 0);
+#else
     return ((CacString[CacBit] == XorCalculate(CacString, CalLength)) ? 1 : 0);
-#else
-    return 1; //不开启奇偶校验时默认成功
 #endif
-}
-
-
-
-
-
-
-
-
-
-
-
-//TODO:用于定深的卡尔曼滤波
-//NOTE:定深算法
-//使用PID，根据设定深度输出一个推进器控制值
-//
-// u16 KalmanFilter(u16 original_value, u16 measure_value)
-// {
-//     for (int i = 0;i < 20;i++)
-//     {
-//         x_mid = x_last;    //x_last=x(k-1|k-1),x_mid=x(k|k-1)
-//         p_mid = p_last + Q;  //p_mid=p(k|k-1),p_last=p(k-1|k-1),Q=噪声
-
-//         kg = p_mid / (p_mid + R); //kg为kalman filter，R为噪声
-//         x_now = x_mid + kg * (measure_value - x_mid); //估计出的最优值
-//         p_now = (1 - kg) * p_mid;//最优值对应的covariance
-
-//         p_last = p_now;  //更新covariance值
-//         x_last = x_now;  //更新系统状态值
-//     }
-
-//     return x_now; //返回kalman估计值
-// }
-
-
-
-
-
-// int main()
-// {
-//     float x_last = 0;
-//     float p_last = 0.02;
-//     float Q = 0.018;
-//     float R = 0.542;
-//     float kg;
-//     float x_mid;
-//     float x_now;
-//     float p_mid;
-//     float p_now;
-//     float z_real = 0.56;//0.56
-//     float z_measure;
-//     float sumerror_kalman = 0;
-//     float sumerror_measure = 0;
-//     int i;
-//     x_last = z_real + frand() * 0.03;
-//     x_mid = x_last;
-
-//     for (i = 0;i < 20;i++)
-//     {
-//         x_mid = x_last;    //x_last=x(k-1|k-1),x_mid=x(k|k-1)
-//         p_mid = p_last + Q;  //p_mid=p(k|k-1),p_last=p(k-1|k-1),Q=噪声
-//         kg = p_mid / (p_mid + R); //kg为kalman filter，R为噪声
-//         z_measure = z_real + frand() * 0.03;//测量值
-//         x_now = x_mid + kg * (z_measure - x_mid);//估计出的最优值
-//         p_now = (1 - kg) * p_mid;//最优值对应的covariance
-
-//         printf("Real     position: %6.3f \n", z_real); //显示真值
-//         printf("Mesaured position: %6.3f [diff:%.3f]\n", z_measure, fabs(z_real - z_measure)); //显示测量值以及真值与测量值之间的误差
-//         printf("Kalman   position: %6.3f [diff:%.3f]\n", x_now, fabs(z_real - x_now)); //显示kalman估计值以及真值和卡尔曼估计值的误差
-
-//         sumerror_kalman += fabs(z_real - x_now); //kalman估计值的累积误差
-//         sumerror_measure += fabs(z_real - z_measure); //真值与测量值的累积误差
-//         p_last = p_now;  //更新covariance值
-//         x_last = x_now;  //更新系统状态值
-//     }
-
-//     printf("总体测量误差      : %f\n", sumerror_measure);  //输出测量累积误差
-//     printf("总体卡尔曼滤波误差: %f\n", sumerror_kalman);   //输出kalman累积误差
-
-//     printf("卡尔曼误差所占比例: %d%% \n", 100 - (int)((sumerror_kalman / sumerror_measure) * 100));
-
-//     return 0;
-// }
-
-
-
-u16 PositionalPID(u16 target_value, u16 actual_value)
-{
-#ifdef HARDWARE_ACCELERATE_PID
-
 #else
     return 1; //不开启校验时默认成功
 #endif
 }
 
-//TODO:专用于的PID算法
-u16 IncrementalPID(u16 target_value, u16 actual_value)
+/**
+ * @brief 初始化卡尔曼滤波结构体
+ * @param  Kalman           卡尔曼滤波结构体
+ * @param  Q                测量误差初值
+ * @param  R                预测误差初值
+ * @param  P                卡尔曼滤波矩阵初值
+ */
+void InitKalman(Algorithm_Kalman_t Kalman, f32 Q, f32 R, KalmanMatrix_t P)
 {
-#ifdef HARDWARE_ACCELERATE_PID
-    //当前误差
-    static float Ek;
-    //前一次误差
-    static float Ek1;
-    //累计积分位置
-    static float LocSum;
-    //数据清空标志位
-    static u8 PIDData = 0;
+    //DEBUG:卡尔曼动态ADT
+    Kalman->Q = Q; //定义测量误差初值
+    Kalman->KalmanMatrix->A = P->A; //定义卡尔曼滤波矩阵初值
+    Kalman->KalmanMatrix->B = P->B;
+    Kalman->KalmanMatrix->C = P->C;
+    Kalman->KalmanMatrix->D = P->D;
+    Kalman->R = R; //定义预测误差初值
+    Kalman->Measure = 0;
+    Kalman->Measure_Pre = 0;
+}
 
-    if (ModeType == 4) //定深模式
-    {
-        PIDData = 0;
-        u16 PIDLoc;
-        Ek = (float)(SetValue - ActualValue);
-        LocSum += Ek;
-        PIDLoc =
-            (u16)(1500
-                + BASICCTRL_RANGE(
-                    (int16_t)(PID_D_Kp * Ek + (PID_D_Ki * LocSum) + PID_D_Kd * (Ek1 - Ek)),
-                    -1000, 1000));
-        return PIDLoc;
-    }
-    else if (ModeType == 2) //定向模式
-    {
-        PIDData = 0;
-        u16 PIDLoc;
-        Ek = (float)(SetValue - ActualValue);
-        LocSum += Ek;
-        PIDLoc =
-            (u16)(1500
-                + BASICCTRL_RANGE(
-                    (int16_t)(PID_O_Kp * Ek + (PID_O_Ki * LocSum) + PID_O_Kd * (Ek1 - Ek)),
-                    -1000, 1000));
-        return PIDLoc;
-    }
-    else
-    {
-        if (!PIDData)
-        {
-            PIDData = 1;
-            Ek = 0;
-            LocSum = 0;
-        }
-        return 0;
-    }
+/**
+ * @brief 进行一次卡尔曼滤波迭代
+ * @param  Kalman           卡尔曼滤波结构体
+ * @param  Measure          测量值
+ * @return f32 本次迭代预测值
+ */
+f32 KalmanIterOnce(Algorithm_Kalman_t Kalman, f32 Measure)
+{
+#ifdef HARDWARE_ACCELERATE_KALMAN
+    //TODO:PID硬件加速
 #else
-    return 1; //不开启校验时默认成功
+    f32 error = 0;
+    f32 A = Kalman->KalmanMatrix->A;
+    f32 B = Kalman->KalmanMatrix->B;
+    f32 C = Kalman->KalmanMatrix->C;
+    f32 D = Kalman->KalmanMatrix->D;
+
+    f32 E = A + B + C + D + Kalman->Q;
+    error = Measure - Kalman->Measure_Pre - Kalman->R;
+    Kalman->Measure_Pre = Kalman->Measure_Pre + Kalman->R + (E - Kalman->R) * error / E;
+    Kalman->R = Kalman->R + (C + D) * error / E;
+
+    Kalman->KalmanMatrix->A = Kalman->R * (E - Kalman->R) / E;
+    Kalman->KalmanMatrix->B = Kalman->R * (B + D) / E;
+    Kalman->KalmanMatrix->C = Kalman->R * (C + D) / E;
+    Kalman->KalmanMatrix->D = ((A * D) + (B * D) - (B * C)) / E;
+
+    return Kalman->Measure_Pre;
 #endif
 }
 
@@ -314,6 +232,7 @@ u16 IncrementalPID(u16 target_value, u16 actual_value)
  */
 void InitPID(u8 mode, Algorithm_PID_t Pid)
 {
+    //DEBUG:PID动态ADT
     Pid->mode = mode;
     Pid->Ref = 0.0f;
     Pid->FeedBack = 0.0f;
@@ -338,10 +257,13 @@ void InitPID(u8 mode, Algorithm_PID_t Pid)
  * @brief 计算PID值并输出
  * @param  Pid              PID结构体
  * @param  feedback         反馈值
- * @return u32
+ * @return u32 运行返回1
  */
 u32 PIDCal(Algorithm_PID_t Pid, f32 feedback)
 {
+#ifdef HARDWARE_ACCELERATE_PID
+    //TODO:PID硬件加速
+#else
     static f32 zero_2 = 0.01f;
     static f32 zero_3 = 0.001f;
     f32 Kp = 0.0f;
@@ -417,7 +339,7 @@ u32 PIDCal(Algorithm_PID_t Pid, f32 feedback)
             rov_mult_f32(&Pid->Ki, &zero_3, &Ki, 1);
             rov_mult_f32(&Ki, &Pid->DeltaIntegral, &Ki, 1);
         }
-        //D在误差较小时开启闭	
+        //D在误差较小时开启
         if ((fabs(Pid->Error) < Pid->KdDomain) || !Pid->KdDomain)
         {
             rov_sub_f32(&Pid->Error, &Pid->DError, &Pid->DDError, 1);
@@ -440,6 +362,7 @@ u32 PIDCal(Algorithm_PID_t Pid, f32 feedback)
     }
     // return Pid->Output;
     return 1;
+#endif
 }
 
 /**
@@ -537,7 +460,7 @@ AttitudeControl_t CommonThrusterControl(u16 straight_num, u16 rotate_num, u16 ve
         ThrusterTemp.VerticalThruster_LeftFront = (vu32)(3000 - vertical_num);
         ThrusterTemp.VerticalThruster_LeftRear = (vu32)(3000 - vertical_num);
         break;
-    case VERTICAL_MIX_MODE: //TODO:自由翻滚模式测试
+    case VERTICAL_MIX_MODE: //DEBUG:自由翻滚模式测试
         u8 AFlag = (rotate_num > straight_num);
         u8 BFlag = ((rotate_num + straight_num) > 3000);
         u8 CFlag = (rotate_num > 1500);
